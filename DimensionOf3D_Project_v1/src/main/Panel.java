@@ -9,10 +9,9 @@ import java.util.Vector;
 
 import javax.swing.JPanel;
 
+import entity.Player;
 import inputSystem.InputHandler;
-import objects.Cube;
 import objects.MeshPart;
-import objects.Triangle2D;
 import variables.Matrix4x4;
 import variables.Vector3D;
 
@@ -33,30 +32,22 @@ public class Panel extends JPanel implements Runnable
 		thr.start();
 	}
 	
-	public 	int FPS 	 = 60;
+	public 	int FPS 	 = 120;
 	public	int px		 = 16;
 	private int WIDTH	 = 70;
 	private int HEIGHT	 = 46;
-	private double delta = 0;
 	
-	public double fN 	 = 0.1;
-	public double fF 	 = 1000;
-	public double AR 	 = 0;
-	public double fFov	 = 90;
-	public double fFovRad= Math.toRadians(fFov);
-
 	public Dimension screen = Toolkit.getDefaultToolkit().getScreenSize();
 	
-	public Window root = new Window();
-	public Thread thr;
+	public Window	  root = new Window();
+	public Thread	  thr;
 	public Graphics2D g2;
-	public InputHandler input = new InputHandler();
 	
-	public Camera camera = new Camera();
-	public Vector3D lightDirection = new Vector3D(0, 0,-1);
-	public Vector3D viewOffset 	   = new Vector3D(1, 1, 0);
+	public Vector3D lightDirection = new Vector3D(0, 1, 1);
 	
-	public MeshPart obj = new MeshPart(this);
+	public InputHandler input	= new InputHandler();
+	public Player		plr 	= new Player(this);
+	public AssetManager obj 	= new AssetManager(this);
 	
 	public Panel()
 	{
@@ -71,15 +62,6 @@ public class Panel extends JPanel implements Runnable
 //		this.addMouseMotionListener	(mMotion);
 //		this.addMouseWheelListener  (mWheel);
 		this.setFocusable    		(true);
-		
-		obj.clr = Color.WHITE;
-		obj.offset = new Vector3D(0, 0, 15);
-		
-//		obj.rY = 45;
-//		obj.rZ = 90;
-		obj.rX = 180;
-		
-		obj.LoadFromObjectFile("test");
 	}
 	
 	public void update()
@@ -87,37 +69,10 @@ public class Panel extends JPanel implements Runnable
 		root.screen[0] = screen.getWidth ();
 		root.screen[1] = screen.getHeight();
 		
-		AR		= root.panel[1]/root.panel[0];
-		fFovRad = Math.toRadians(fFov);
+		MeshPart m = (MeshPart)obj.mesh.get("Group1").get(0);
+		m.rY += 1;
 		
-		if(input.keyCode.indexOf("SPACE") != -1)
-			camera.p.y -= .5;
-		if(input.keyCode.indexOf("Shift") != -1)
-			camera.p.y += .5;
-		
-		if(input.keyCode.indexOf("A") != -1)
-			camera.p.x -= .5;
-		if(input.keyCode.indexOf("D") != -1)
-			camera.p.x += .5;
-		
-		Vector3D forward = Vector3D.Mul(camera.look, .25);
-		
-		if(input.keyCode.indexOf("W") != -1)
-			camera.p =  Vector3D.Add(camera.p, forward);
-		if(input.keyCode.indexOf("S") != -1)
-			camera.p =  Vector3D.Sub(camera.p, forward);
-		
-		if(input.keyCode.indexOf("J") != -1)
-			camera.rotation.y -= 1;
-		if(input.keyCode.indexOf("L") != -1)
-			camera.rotation.y += 1;
-		
-		if(input.keyCode.indexOf("I") != -1)
-			camera.rotation.x += 1;
-		if(input.keyCode.indexOf("K") != -1)
-			camera.rotation.x -= 1;
-		
-		obj.updateMatrix();
+		plr.update();
 	}
 
 	@Override
@@ -159,7 +114,7 @@ public class Panel extends JPanel implements Runnable
 		g2 = (Graphics2D) g;
 		g2.setColor(Color.WHITE);
 		
-		obj.generate(g2);
+		obj.generateAll(g2);
 		
 		g2.dispose();
 	}

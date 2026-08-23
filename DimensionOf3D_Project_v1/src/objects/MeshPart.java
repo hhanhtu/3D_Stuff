@@ -19,27 +19,13 @@ import variables.Matrix4x4;
 import variables.Theta;
 import variables.Vector3D;
 
-public class MeshPart
+public class MeshPart extends SuperObject
 {
-	public Panel 			  pn;
-	public Vector<Triangle2D> tris;
-	public Color 			  clr;
-	public Vector3D 		  offset;
-	public Vector3D			  size;
-	public double 			  scale;
-	public double 			  rX, rY, rZ;
-	
-	private Vector3D 	vUp; 
-	private Vector3D 	vT ;
-	
-	private Matrix4x4 	vCam = new Matrix4x4();
-	private Matrix4x4 	mCam = new Matrix4x4();
-	
 	private Matrix4x4	mat;
 	private Theta 		t;
 	
-	private Matrix4x4 	matTrans = Matrix4x4.createTranslation(0, 0, 0);
-	private Matrix4x4 	matWorld = Matrix4x4.create();
+	private Matrix4x4 	matTrans; 
+	private Matrix4x4 	matWorld; 
 	
 	public MeshPart(Panel pn)
 	{
@@ -53,52 +39,66 @@ public class MeshPart
 		size   = new Vector3D(1, 1, 1);
 		scale  = 1;
 		
+		matTrans = Matrix4x4.createTranslation(0, 0, 0); 
+		matWorld = Matrix4x4.create();                   
+		
 		rX = 0;
 		rY = 0;
 		rZ = 0;
-		
-		vUp = new Vector3D(0, 1, 0);
-		Matrix4x4 camY = Theta.calculateMatrixRotationY(Math.toRadians(pn.camera.rotation.y));
-		pn.camera.look = Matrix4x4.MultiplyMatrixVector(camY, new Vector3D(0, 0, 1));
-		vT  = Vector3D.Add(pn.camera.p, pn.camera.look);
-		
-		mCam = Matrix4x4.PointAt(pn.camera.p, vT, vUp);
-		vCam = Matrix4x4.quickInvert(mCam);
 	}
+	/*
+									SQUARE BY HAND
+		Vector<Triangle2D> tris = new Vector<>();
+		// Front
+		tris.add(new Triangle2D(new Vector3D(0, 0, 0), new Vector3D(0, 1, 0), new Vector3D(1, 1, 0)));
+		tris.add(new Triangle2D(new Vector3D(0, 0, 0), new Vector3D(1, 1, 0), new Vector3D(1, 0, 0)));
+		// Right
+		tris.add(new Triangle2D(new Vector3D(1, 0, 0), new Vector3D(1, 1, 0), new Vector3D(1, 1, 1)));
+		tris.add(new Triangle2D(new Vector3D(1, 0, 0), new Vector3D(1, 1, 1), new Vector3D(1, 0, 1)));
+		// Back
+		tris.add(new Triangle2D(new Vector3D(1, 0, 1), new Vector3D(1, 1, 1), new Vector3D(0, 1, 1)));
+		tris.add(new Triangle2D(new Vector3D(1, 0, 1), new Vector3D(0, 1, 1), new Vector3D(0, 0, 1)));
+		// Left
+		tris.add(new Triangle2D(new Vector3D(0, 0, 1), new Vector3D(0, 1, 1), new Vector3D(0, 1, 0)));
+		tris.add(new Triangle2D(new Vector3D(0, 0, 1), new Vector3D(0, 1, 0), new Vector3D(0, 0, 0)));
+		// Top
+		tris.add(new Triangle2D(new Vector3D(0, 1, 0), new Vector3D(0, 1, 1), new Vector3D(1, 1, 1)));
+		tris.add(new Triangle2D(new Vector3D(0, 1, 0), new Vector3D(1, 1, 1), new Vector3D(1, 1, 0)));
+		// Bottom
+		tris.add(new Triangle2D(new Vector3D(1, 0, 1), new Vector3D(0, 0, 1), new Vector3D(0, 0, 0)));
+		tris.add(new Triangle2D(new Vector3D(1, 0, 1), new Vector3D(0, 0, 0), new Vector3D(1, 0, 0)));
+	 */
 	
 	@SuppressWarnings("rawtypes")
 	public void generate(Graphics2D g2)
 	{
+		updateMatrix();
+		
 		Theta.updateRotation(t);
 		
 		Vector<Triangle2D> triToRender = new Vector<>();
 		
 		for(Triangle2D tri:tris)
 		{
-			Triangle2D triProjected  = new Triangle2D(new Vector3D(0, 0, 0), new Vector3D(0, 0, 0), new Vector3D(0, 0, 0));
-			Triangle2D triTransformed= new Triangle2D(new Vector3D(0, 0, 0), new Vector3D(0, 0, 0), new Vector3D(0, 0, 0));
-			Triangle2D triView 		 = new Triangle2D(new Vector3D(0, 0, 0), new Vector3D(0, 0, 0), new Vector3D(0, 0, 0));
+			Triangle2D triProjected   = new Triangle2D(new Vector3D(0, 0, 0), new Vector3D(0, 0, 0), new Vector3D(0, 0, 0));
+			Triangle2D triTransformed = new Triangle2D(new Vector3D(0, 0, 0), new Vector3D(0, 0, 0), new Vector3D(0, 0, 0));
+			Triangle2D triView 		  = new Triangle2D(new Vector3D(0, 0, 0), new Vector3D(0, 0, 0), new Vector3D(0, 0, 0));
 			
 			triTransformed.p[0] = Matrix4x4.MultiplyMatrixVector(matWorld, tri.p[0]);
 			triTransformed.p[1] = Matrix4x4.MultiplyMatrixVector(matWorld, tri.p[1]);
 			triTransformed.p[2] = Matrix4x4.MultiplyMatrixVector(matWorld, tri.p[2]);
 			
-			triTransformed.p[0].z += offset.z;
-			triTransformed.p[1].z += offset.z;
-			triTransformed.p[2].z += offset.z;
+			triTransformed.p[0] = Vector3D.Mul(Vector3D.Add(triTransformed.p[0], offset), scale);
+			triTransformed.p[1] = Vector3D.Mul(Vector3D.Add(triTransformed.p[1], offset), scale);
+			triTransformed.p[2] = Vector3D.Mul(Vector3D.Add(triTransformed.p[2], offset), scale);
 			
 			Vector3D line1  = Vector3D.Line(triTransformed.p[1], triTransformed.p[0]);
 			Vector3D line2  = Vector3D.Line(triTransformed.p[2], triTransformed.p[0]);
-			Vector3D normal = Vector3D.Cross(line1, line2);
+			Vector3D normal = Vector3D.Normalise(Vector3D.Cross(line1, line2));
 			
-			double l = Vector3D.D(normal);
-			normal.x /= l;
-			normal.y /= l;
-			normal.z /= l;
-			
-			triView.p[0] = Matrix4x4.MultiplyMatrixVector(vCam, triTransformed.p[0]);
-			triView.p[1] = Matrix4x4.MultiplyMatrixVector(vCam, triTransformed.p[1]);
-			triView.p[2] = Matrix4x4.MultiplyMatrixVector(vCam, triTransformed.p[2]);
+			triView.p[0] = Matrix4x4.MultiplyMatrixVector(pn.plr.camera.vCam, triTransformed.p[0]);
+			triView.p[1] = Matrix4x4.MultiplyMatrixVector(pn.plr.camera.vCam, triTransformed.p[1]);
+			triView.p[2] = Matrix4x4.MultiplyMatrixVector(pn.plr.camera.vCam, triTransformed.p[2]);
 			
 			HashMap<String, Vector> result =  Vector3D.TriangleClippingInPlane(g2, new Vector3D(0, 0, .05), new Vector3D(0, 0, 1), triView);
 			
@@ -114,9 +114,9 @@ public class MeshPart
 				triProjected.p[1] = Vector3D.Div(triProjected.p[1], triProjected.p[1].w);
 				triProjected.p[2] = Vector3D.Div(triProjected.p[2], triProjected.p[2].w);
 				
-				triProjected.p[0].x += 1; triProjected.p[0].y += 1;
-				triProjected.p[1].x += 1; triProjected.p[1].y += 1;
-				triProjected.p[2].x += 1; triProjected.p[2].y += 1;
+				triProjected.p[0] = Vector3D.Add(triProjected.p[0], pn.plr.camera.viewOffset);
+				triProjected.p[1] = Vector3D.Add(triProjected.p[1], pn.plr.camera.viewOffset);
+				triProjected.p[2] = Vector3D.Add(triProjected.p[2], pn.plr.camera.viewOffset);
 				
 				triProjected.p[0].x *= pn.root.panel[0]/2;
 				triProjected.p[1].x *= pn.root.panel[0]/2;
@@ -125,20 +125,16 @@ public class MeshPart
 				triProjected.p[1].y *= pn.root.panel[1]/2;
 				triProjected.p[2].y *= pn.root.panel[1]/2;
 				
-				Vector3D camRay = Vector3D.Sub(triTransformed.p[0], pn.camera.p);
+				Vector3D camRay = Vector3D.Sub(triTransformed.p[0], Vector3D.Add(pn.plr.camera.p, pn.lightDirection));
 				
 				if(Vector3D.DotProduct(normal, camRay) < 0)		// < 0 : view outside surface		|| > 0 : view inside surface
 				{
-					double dL = Vector3D.D(pn.lightDirection);
-					pn.lightDirection.x /= dL;
-					pn.lightDirection.y /= dL;
-					pn.lightDirection.z /= dL;
+					Vector3D dL = Vector3D.Normalise(Vector3D.Add(pn.plr.camera.p, pn.lightDirection));
 					
-					double dp = normal.x * pn.lightDirection.x + normal.y * pn.lightDirection.y + normal.z * pn.lightDirection.z;
+					double dp = Vector3D.DotProduct(normal, dL);
 					
-					triProjected.clr = new Color((int)(clr.getRed()	 	*dp),
-							 					 (int)(clr.getGreen()	*dp),
-							 					 (int)(clr.getBlue()	*dp));
+					triProjected.clr		= clr;
+					triProjected.LightLevel = dp;
 					
 					triToRender.addLast(triProjected);
 				}
@@ -154,6 +150,29 @@ public class MeshPart
 			
 			return 0;
 		});
+		
+		for(Triangle2D tri: triToRender)
+		{
+			int r = tri.clr.getRed();
+			int g = tri.clr.getGreen();
+			int b = tri.clr.getBlue();
+			
+			if(tri.LightLevel < 0)
+			{
+				tri.clr = new Color(
+						Math.abs((int)(r * tri.LightLevel)),
+						Math.abs((int)(g * tri.LightLevel)),
+						Math.abs((int)(b * tri.LightLevel))
+						);
+			} else {
+				tri.clr = new Color(
+						(int)(r * tri.LightLevel),
+						(int)(g * tri.LightLevel),
+						(int)(b * tri.LightLevel)
+						);
+			}
+			
+		}
 		
 		for(Triangle2D triToRaster: triToRender)
 		{
@@ -203,27 +222,17 @@ public class MeshPart
 			
 			for(Triangle2D tri: trs)
 			{
+				// render solid
 				Triangle2D.fill(g2, tri);
 				
-				Triangle2D.draw(g2, tri, new Color(255 - tri.clr.getRed(), 255 - tri.clr.getGreen(), 255 - tri.clr.getBlue()));
+				// wire frame
+//				Triangle2D.draw(g2, tri, new Color(255 - tri.clr.getRed(), 255 - tri.clr.getGreen(), 255 - tri.clr.getBlue()));
 			}
 		}
 	}
 	
 	public void updateMatrix()
 	{
-		Matrix4x4 camX = Theta.calculateMatrixRotationX(Math.toRadians(pn.camera.rotation.x));
-		Matrix4x4 camY = Theta.calculateMatrixRotationY(Math.toRadians(pn.camera.rotation.y));
-		Matrix4x4 camZ = Theta.calculateMatrixRotationX(Math.toRadians(pn.camera.rotation.z));
-		
-		pn.camera.look = Matrix4x4.MultiplyMatrixVector(Matrix4x4.Mul(camZ, Matrix4x4.Mul(camY, camX)), new Vector3D(0, 0, 1));
-		vT  = Vector3D.Add(pn.camera.p, pn.camera.look);
-		
-		mCam = Matrix4x4.PointAt(pn.camera.p, vT, vUp);
-		vCam = Matrix4x4.quickInvert(mCam);
-		
-		rY += 1;
-		
 		t.x = Math.toRadians(rX);
 		t.y = Math.toRadians(rY);
 		t.z = Math.toRadians(rZ);
@@ -231,7 +240,7 @@ public class MeshPart
 		matWorld = Matrix4x4.Mul(Matrix4x4.Mul(t.matRotZ, t.matRotX), t.matRotY);
 		matWorld = Matrix4x4.Mul(matWorld, matTrans);
 		
-		Matrix4x4.updateMat(mat, pn.AR, pn.fFovRad, pn.fF, pn.fN);
+		Matrix4x4.updateMat(mat, pn.plr.camera.AR, pn.plr.camera.fFovRad, pn.plr.camera.fF, pn.plr.camera.fN);
 	}
 	
 	public void LoadFromObjectFile(String name)
@@ -268,11 +277,7 @@ public class MeshPart
 						f[1] = Integer.parseInt(var[2]);
 						f[2] = Integer.parseInt(var[3]);
 						
-//						System.out.println(f[0]);
-						
-//						tris.add(new Triangle2D(verts[f[0] - 1], verts[f[1] - 1], verts[f[2] - 1]));
 						tris.add(new Triangle2D(verts.get(f[0] - 1), verts.get(f[1] - 1), verts.get(f[2] - 1)));
-						
 					}
 				}
 				

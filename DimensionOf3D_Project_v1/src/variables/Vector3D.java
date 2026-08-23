@@ -23,6 +23,7 @@ public class Vector3D
 	public static Vector3D IntersectPlane(Vector3D planeP, Vector3D planeN, Vector3D start, Vector3D end)
 	{
 		planeN = Vector3D.Normalise(planeN);
+		
 		double planeD = Vector3D.DotProduct(planeN, planeP);
 		
 		double ad = Vector3D.DotProduct(start, planeN);
@@ -42,7 +43,6 @@ public class Vector3D
 		HashMap<String, Vector> result = new HashMap<>();
 		
 		planeN = Vector3D.Normalise(planeN);
-//		planeP = Vector3D.Normalise(planeP);
 		
 		Vector3D[] inPoint  = new Vector3D[3]; 	int nInPointCount  = 0;
 		Vector3D[] outPoint = new Vector3D[3];	int nOutPointCount = 0;
@@ -51,38 +51,36 @@ public class Vector3D
 		double d1 = Vector3D.DotProduct(planeN, in.p[1]) - Vector3D.DotProduct(planeN, planeP);
 		double d2 = Vector3D.DotProduct(planeN, in.p[2]) - Vector3D.DotProduct(planeN, planeP);
 		
-		if(d0 >= 0) {inPoint[nInPointCount++]	 = in.p[0];
+		if(d0 >= 0) {inPoint [nInPointCount++]	 = in.p[0];
 		} else		{outPoint[nOutPointCount++]	 = in.p[0];
 		}
-		if(d1 >= 0) {inPoint[nInPointCount++]	 = in.p[1];
+		if(d1 >= 0) {inPoint [nInPointCount++]	 = in.p[1];
 		} else		{outPoint[nOutPointCount++]	 = in.p[1];
 		}
-		if(d2 >= 0) {inPoint[nInPointCount++]	 = in.p[2];
+		if(d2 >= 0) {inPoint [nInPointCount++]	 = in.p[2];
 		} else		{outPoint[nOutPointCount++]	 = in.p[2];
 		}
 		
-		Vector<Integer> niop = new Vector<>();
-		Vector<Double> d012 = new Vector<>();
-		Vector<Triangle2D> tris = new Vector<>();
-		Vector<Integer> ntri = new Vector<>();
+		Vector<Integer>		 niop = new Vector<>();
+		Vector<Double>		 d012 = new Vector<>();
+		Vector<Triangle2D>	 tris = new Vector<>();
+		Vector<Integer>		 ntri = new Vector<>();
 		
 		niop.add(nInPointCount);
 		niop.add(nOutPointCount);
 		
 		d012.add(d0); d012.add(d1); d012.add(d2);
 		
-		result.put("NumbersOfPoint", niop);
-		result.put("Distance", d012);
+		result.put("NumbersOfPoint" , niop);
+		result.put("Distance"		, d012);
 		
 		if(nInPointCount == 0)
 		{
 			ntri.add(0);
 			tris.add(null);
 			
-			result.put("n_tris", ntri);
-			result.put("Triangles", tris);
-			
-			return result;
+			result.put("n_tris"		, ntri);
+			result.put("Triangles"	, tris);
 		}
 		
 		if(nInPointCount == 3)
@@ -93,10 +91,8 @@ public class Vector3D
 			ntri.add(1);
 			tris.add(out1);
 			
-			result.put("n_tris", ntri);
-			result.put("Triangles", tris);
-			
-			return result;
+			result.put("n_tris"		, ntri);
+			result.put("Triangles"	, tris);
 		}
 		
 		if(nInPointCount == 1 && nOutPointCount == 2)
@@ -111,10 +107,8 @@ public class Vector3D
 			ntri.add(1);
 			tris.add(out1);
 			
-			result.put("n_tris", ntri);
-			result.put("Triangles", tris);
-			
-			return result;
+			result.put("n_tris"		, ntri);
+			result.put("Triangles"	, tris);
 		}
 		
 		if(nInPointCount == 2 && nOutPointCount == 1)
@@ -131,12 +125,6 @@ public class Vector3D
 			
 			result.put("n_tris", ntri);
 			result.put("Triangles", tris);
-			
-//			out2.clr = Color.red;
-			Triangle2D.fill(g2, out2);
-			Triangle2D.fill(g2, out1);
-			
-			return result;
 		}
 		
 		return result;

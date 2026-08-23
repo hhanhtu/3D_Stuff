@@ -10,14 +10,18 @@ import variables.Vector3D;
 public class Triangle2D
 {
 	public Vector3D[] p;
-	public Color clr;
+	public Color	  clr;
+	public double	  LightLevel;
 	
 	public Triangle2D(Vector3D p1, Vector3D p2, Vector3D p3)
 	{
-		p = new Vector3D[3];
+		p	 = new Vector3D[3];
 		p[0] = p1;
 		p[1] = p2;
 		p[2] = p3;
+		
+		clr		   = Color.WHITE;
+		LightLevel = 0;
 	}
 	
 	public static void draw(Graphics2D g2, Triangle2D tri, Color clr)
