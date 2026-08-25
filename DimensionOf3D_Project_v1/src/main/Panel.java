@@ -5,6 +5,8 @@ import java.awt.Dimension;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.Toolkit;
+import java.time.Duration;
+import java.time.Instant;
 import java.util.Vector;
 
 import javax.swing.JPanel;
@@ -32,7 +34,7 @@ public class Panel extends JPanel implements Runnable
 		thr.start();
 	}
 	
-	public 	int FPS 	 = 120;
+	public 	int FPS 	 = 60;
 	public	int px		 = 16;
 	private int WIDTH	 = 70;
 	private int HEIGHT	 = 46;
@@ -43,7 +45,7 @@ public class Panel extends JPanel implements Runnable
 	public Thread	  thr;
 	public Graphics2D g2;
 	
-	public Vector3D lightDirection = new Vector3D(0, 1, 1);
+	public Vector3D lightDirection = new Vector3D(0, 0, 0);
 	
 	public InputHandler input	= new InputHandler();
 	public Player		plr 	= new Player(this);
@@ -62,6 +64,9 @@ public class Panel extends JPanel implements Runnable
 //		this.addMouseMotionListener	(mMotion);
 //		this.addMouseWheelListener  (mWheel);
 		this.setFocusable    		(true);
+		
+		plr.camera.p.y = -px*2;
+		plr.camera.rotation.y = Math.toRadians(90);
 	}
 	
 	public void update()
@@ -69,10 +74,9 @@ public class Panel extends JPanel implements Runnable
 		root.screen[0] = screen.getWidth ();
 		root.screen[1] = screen.getHeight();
 		
-		MeshPart m = (MeshPart)obj.mesh.get("Group1").get(0);
-		m.rY += 1;
-		
 		plr.update();
+		
+		obj.assetsUpdate();
 	}
 
 	@Override
@@ -85,7 +89,7 @@ public class Panel extends JPanel implements Runnable
 		long	 timer   = 0;
 		int		 dCount  = 0;
 		long	 curTime;
-				
+		
 		while(thr != null) {
 			curTime = System.nanoTime();
 			delta  += (curTime - last)/dIntV;

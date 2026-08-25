@@ -12,5 +12,6 @@ public class Entity
 	
 	public double height;
 	public double weight;
+	public double speed;
 	
 }

@@ -20,6 +20,7 @@ public class Camera
 	private Matrix4x4 	mCam = new Matrix4x4();
 	
 	public Vector3D viewOffset = new Vector3D(1, 1, 0);
+	public Vector3D screenAdjust;
 	
 	public Panel pn;
 	
@@ -35,6 +36,8 @@ public class Camera
 		
 		p		 = new Vector3D (0, 0, 0);
 		rotation = new Theta	(0, 0, 0);
+		
+		screenAdjust = new Vector3D(pn.root.panel[0]/2, pn.root.panel[1]/2, 0);
 		
 		face.put("look"	, new Vector3D(0, 0, 1));
 		face.put("up"	, new Vector3D(0, 1, 0));
