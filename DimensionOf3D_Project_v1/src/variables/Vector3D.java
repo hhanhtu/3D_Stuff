@@ -107,8 +107,6 @@ public class Vector3D
 			ntri.add(1);
 			tris.add(out1);
 			
-//			Triangle2D.fill(g2, out1);
-			
 			result.put("n_tris"		, ntri);
 			result.put("Triangles"	, tris);
 		}
@@ -125,9 +123,6 @@ public class Vector3D
 			tris.add(out1);
 			tris.add(out2);
 			
-//			Triangle2D.fill(g2, out1);
-//			Triangle2D.fill(g2, out2);
-			
 			result.put("n_tris", ntri);
 			result.put("Triangles", tris);
 		}
@@ -140,9 +135,18 @@ public class Vector3D
 		return Math.sqrt(p.x*p.x + p.y*p.y + p.z*p.z);
 	}
 	
-	public static double L(Vector3D v1, Vector3D v2)
+	public static double DotProduct_abs(Vector3D v1, Vector3D v2, int t)
 	{
-		return v1.x*v2.x + v1.y*v2.y + v1.z*v2.z;
+		if(t == 1)
+		{
+			return Math.abs(v1.x)*v2.x + Math.abs(v1.y)*v2.y + Math.abs(v1.z)*v2.z;
+		}
+		if(t == 2)
+		{
+			return v1.x*Math.abs(v2.x) + v1.y*Math.abs(v2.y) + v1.z*Math.abs(v2.z);
+		}
+		
+		return Math.abs(v1.x*v2.x) + Math.abs(v1.y*v2.y) + Math.abs(v1.z*v2.z);
 	}
 	
 	public static Vector3D Normalise(Vector3D p)

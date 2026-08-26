@@ -22,11 +22,10 @@ import variables.Vector3D;
 @SuppressWarnings("rawtypes")
 public class MeshPart extends SuperObject
 {
-	private Matrix4x4	mat;
 	private Theta 		t;
 	
-	private Matrix4x4 	matTrans; 
-	private Matrix4x4 	matWorld; 
+	public Matrix4x4	matTrans;
+	public Matrix4x4 	matWorld;
 	
 	private Vector3D topPlane	;
 	private Vector3D bottomPlane;
@@ -38,10 +37,12 @@ public class MeshPart extends SuperObject
 		this.pn = pn;
 
 		t 	 = new Theta(0, 0, 0);
-		mat  = new Matrix4x4();
+		
 		tris = new Vector<>();
 		
-		offset = new Vector3D(0, 0, 3);
+		offset	 = new Vector3D(0, 0, 3);
+		location = new Vector3D(0, 0, 3);
+		
 		size   = new Vector3D(1, 1, 1);
 		scale  = 1;
 		
@@ -49,7 +50,7 @@ public class MeshPart extends SuperObject
 		matWorld = Matrix4x4.create();  
 		
 		topPlane	 = new Vector3D(0, 0				  	 , 2);
-		bottomPlane = new Vector3D(0, pn.root.panel[1] - 1	 , 2);
+		bottomPlane  = new Vector3D(0, pn.root.panel[1] - 1	 , 2);
 		rightPlane	 = new Vector3D(0,						0, 2);
 		leftPlane	 = new Vector3D(pn.root.panel[0] - 1,	0, 2);
 		
@@ -84,14 +85,13 @@ public class MeshPart extends SuperObject
 		tris.add(new Triangle2D(new Vector3D(1, 0, 1), new Vector3D(0, 0, 0), new Vector3D(1, 0, 0)));
 	 */
 	
-	public void generate(Graphics2D g2)
+	public void generate(Graphics2D g2, boolean action)
 	{
 		Theta.updateRotation(t);
 		
 		Vector<Triangle2D> triToRender = new Vector<>();
-		Vector<Double> coordinatesX = new Vector<>();
-		Vector<Double> coordinatesY = new Vector<>();
-		Vector<Double> coordinatesZ = new Vector<>();
+		
+		location = Vector3D.Div(Matrix4x4.MultiplyMatrixVector(mat, Matrix4x4.MultiplyMatrixVector(pn.plr.camera.vCam, Vector3D.Mul(offset, scale))), offset.w);
 		
 		for(Triangle2D tri:tris)
 		{
@@ -102,10 +102,6 @@ public class MeshPart extends SuperObject
 			triTransformed.p[0] = Matrix4x4.MultiplyMatrixVector(matWorld, tri.p[0]);
 			triTransformed.p[1] = Matrix4x4.MultiplyMatrixVector(matWorld, tri.p[1]);
 			triTransformed.p[2] = Matrix4x4.MultiplyMatrixVector(matWorld, tri.p[2]);
-			
-			coordinatesX.add(tri.p[0].x);	coordinatesY.add(tri.p[0].y);	coordinatesZ.add(tri.p[0].z);
-			coordinatesX.add(tri.p[1].x);   coordinatesY.add(tri.p[1].y);   coordinatesZ.add(tri.p[1].z);
-			coordinatesX.add(tri.p[2].x);   coordinatesY.add(tri.p[2].y);   coordinatesZ.add(tri.p[2].z);
 			
 			triTransformed.p[0] = Vector3D.Mul(Vector3D.Add(triTransformed.p[0], offset), scale);
 			triTransformed.p[1] = Vector3D.Mul(Vector3D.Add(triTransformed.p[1], offset), scale);
@@ -161,14 +157,6 @@ public class MeshPart extends SuperObject
 			}
 		}
 		
-		coordinatesX.sort(Comparator.reverseOrder());
-		coordinatesY.sort(Comparator.reverseOrder());
-		coordinatesZ.sort(Comparator.reverseOrder());
-		
-		size.x = coordinatesX.getFirst();
-		size.y = coordinatesY.getFirst();
-		size.z = coordinatesZ.getFirst();
-		
 		triToRender.sort((Triangle2D t1, Triangle2D t2) -> {
 			double z1 = (t1.p[0].z + t1.p[1].z + t1.p[2].z) / 3;
 			double z2 = (t2.p[0].z + t2.p[1].z + t2.p[2].z) / 3;
@@ -181,6 +169,8 @@ public class MeshPart extends SuperObject
 		
 		for(Triangle2D triToRaster: triToRender)
 		{
+			if(!action) return;
+			
 			int r = triToRaster.clr.getRed();
 			int g = triToRaster.clr.getGreen();
 			int b = triToRaster.clr.getBlue();
@@ -262,7 +252,31 @@ public class MeshPart extends SuperObject
 		}
 	}
 	
-	public void updateMatrix()
+	public Vector3D size()
+	{
+		Vector<Double> coordinatesX = new Vector<>();
+		Vector<Double> coordinatesY = new Vector<>();
+		Vector<Double> coordinatesZ = new Vector<>();
+		
+		for(Triangle2D tri: tris)
+		{
+			coordinatesX.add(tri.p[0].x);	coordinatesY.add(tri.p[0].y);	coordinatesZ.add(tri.p[0].z);
+			coordinatesX.add(tri.p[1].x);   coordinatesY.add(tri.p[1].y);   coordinatesZ.add(tri.p[1].z);
+			coordinatesX.add(tri.p[2].x);   coordinatesY.add(tri.p[2].y);   coordinatesZ.add(tri.p[2].z);
+		}
+		
+		coordinatesX.sort(Comparator.reverseOrder());
+		coordinatesY.sort(Comparator.reverseOrder());
+		coordinatesZ.sort(Comparator.reverseOrder());
+		
+		size.x = coordinatesX.getFirst();
+		size.y = coordinatesY.getFirst();
+		size.z = coordinatesZ.getFirst();
+		
+		return size;
+	}
+	
+	public void update()
 	{
 		if(configuration != null)
 		{
@@ -276,7 +290,7 @@ public class MeshPart extends SuperObject
 		matWorld = Matrix4x4.Mul(Matrix4x4.Mul(t.matRotZ, t.matRotX), t.matRotY);
 		matWorld = Matrix4x4.Mul(matWorld, matTrans);
 		
-		Matrix4x4.updateMat(mat, pn.plr.camera.AR, pn.plr.camera.fFovRad, pn.plr.camera.fF, pn.plr.camera.fN);
+		UpdateMatrix();
 	}
 	
 	private Triangle2D getTrianglesFromClipResult(HashMap<String, Vector> c, int j)
