@@ -23,11 +23,15 @@ public class SuperObject
 	public double 			  rX, rY, rZ;
 	
 	public String 			  name;
-	public boolean 			  wireframe;
 	
 	public Runnable 		  configuration;
 	
 	public Matrix4x4	mat = new Matrix4x4();
+	
+	public static Vector3D topPlane		(Panel pn) {return new Vector3D(0, 0				  	 , 2);}
+	public static Vector3D bottomPlane	(Panel pn) {return new Vector3D(0, pn.root.panel[1] - 1	 , 2);}
+	public static Vector3D rightPlane	(Panel pn) {return new Vector3D(0,						0, 2);}
+	public static Vector3D leftPlane	(Panel pn) {return new Vector3D(pn.root.panel[0] - 1,	0, 2);}
 	
 	public void UpdateMatrix()
 	{

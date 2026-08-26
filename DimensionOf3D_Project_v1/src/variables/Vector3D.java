@@ -38,7 +38,7 @@ public class Vector3D
 	}
 	
 	@SuppressWarnings("rawtypes")
-	public static HashMap<String, Vector> TriangleClippingInPlane(Graphics2D g2, Vector3D planeP, Vector3D planeN, Triangle2D in)
+	public static HashMap<String, Vector> TriangleClippingInPlane(Vector3D planeP, Vector3D planeN, Triangle2D in)
 	{
 		HashMap<String, Vector> result = new HashMap<>();
 		

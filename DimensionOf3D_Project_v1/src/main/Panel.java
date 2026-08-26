@@ -65,8 +65,8 @@ public class Panel extends JPanel implements Runnable
 //		this.addMouseWheelListener  (mWheel);
 		this.setFocusable    		(true);
 		
-		plr.camera.p.y = -px*2;
-		plr.camera.rotation.y = Math.toRadians(90);
+		plr.camera.p.y = -px*2 - 5;
+//		plr.camera.rotation.y = Math.toRadians(90);
 	}
 	
 	public void update()
