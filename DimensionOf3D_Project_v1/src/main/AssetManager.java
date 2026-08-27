@@ -36,7 +36,7 @@ public class AssetManager
 	public void loadAsset()
 	{
 		Vector<MeshPart> m = Presets.platform(pn);
-		
+
 		for(int k = -1; k <= 1; k++)
 		{
 			if(k != 0)
@@ -48,7 +48,7 @@ public class AssetManager
 					pillar1.clr = Color.GREEN;
 					pillar1.scale = 2;
 					pillar1.name = "Pillar";
-					pillar1.offset = new Vector3D(15 * k, 0, i * 15/2);
+					pillar1.offset = new Vector3D(15 * k, 0, i * 15);
 					pillar1.rX = 180;
 					
 					if(i%2 == 0) pillar1.clr = Color.BLUE;
@@ -58,7 +58,7 @@ public class AssetManager
 					pillar2.clr = Color.GREEN;
 					pillar2.scale = 2;
 					pillar2.name = "Pillar";
-					pillar2.offset = new Vector3D(15 * k, 0,-i * 15/2);
+					pillar2.offset = new Vector3D(15 * k, 0,-i * 15);
 					pillar2.rX = 180;
 					
 					if(i%2 == 0) pillar2.clr = Color.BLUE;
@@ -70,18 +70,6 @@ public class AssetManager
 		}
 		
 		mesh.put("Workspace", m);
-	}
-	
-	public void assetsUpdate()
-	{
-		for(Map.Entry<String, Vector> i: mesh.entrySet())
-		{
-			for(Object o: i.getValue())
-			{
-				MeshPart m = (MeshPart)o;
-				m.update();
-			}
-		}
 	}
 	
 	public void generateAll(Graphics2D g2)
@@ -117,21 +105,40 @@ public class AssetManager
 			int g = triToRaster.clr.getGreen();
 			int b = triToRaster.clr.getBlue();
 			
-			if(triToRaster.parent != "floor")
+			if(triToRaster.parent != "Sun" && triToRaster.parent != "Moon")
 			{
-				try {
-					triToRaster.clr = new Color(
-							(int)(r*triToRaster.LightLevel),
-							(int)(g*triToRaster.LightLevel),
-							(int)(b*triToRaster.LightLevel)
-							);
-				} catch(Exception e)
+				if(pn.light.state == "night")
 				{
-					triToRaster.clr = new Color(
-							(int)(0*triToRaster.LightLevel),
-							(int)(0*triToRaster.LightLevel),
-							(int)(0*triToRaster.LightLevel)
-							);
+					try {
+						triToRaster.clr = new Color(
+								(int)(r/pn.light.DARKNESS	 *triToRaster.LightLevel),
+								(int)(g/pn.light.DARKNESS	 *triToRaster.LightLevel),
+								(int)(b/(pn.light.DARKNESS/2)*triToRaster.LightLevel)
+								);
+					} catch(Exception e)
+					{
+						triToRaster.clr = new Color(
+								(int)(0*triToRaster.LightLevel),
+								(int)(0*triToRaster.LightLevel),
+								(int)(0*triToRaster.LightLevel)
+								);
+					}
+				} else
+				{
+					try {
+						triToRaster.clr = new Color(
+								(int)(r*triToRaster.LightLevel),
+								(int)(g*triToRaster.LightLevel),
+								(int)(b*triToRaster.LightLevel)
+								);
+					} catch(Exception e)
+					{
+						triToRaster.clr = new Color(
+								(int)(0*triToRaster.LightLevel),
+								(int)(0*triToRaster.LightLevel),
+								(int)(0*triToRaster.LightLevel)
+								);
+					}
 				}
 			}
 			
@@ -193,6 +200,21 @@ public class AssetManager
 				}
 				
 				nTris = trs.size();
+			}
+		}
+	
+		if(WIREFRAME)
+		{
+			for(MeshPart m: obj)
+			{
+				Vector3D pointTransformed = Matrix4x4.MultiplyMatrixVector(SuperObject.matWorld, m.offset);
+				Vector3D pointViewed	  = Matrix4x4.MultiplyMatrixVector(pn.plr.camera.vCam, pointTransformed);
+				Vector3D point 			  = Matrix4x4.MultiplyMatrixVector(SuperObject.mat, pointViewed);
+				point = Vector3D.Div(point, point.w);
+				point = Vector3D.Add(point, pn.plr.camera.viewOffset);
+				
+				pn.g2.setColor(Color.RED);
+				pn.g2.fillOval((int)(point.x * pn.root.panel[0]/2 - 4), (int)(point.y * pn.root.panel[1]/2  - 4), 8, 8);
 			}
 		}
 	}

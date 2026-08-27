@@ -22,23 +22,15 @@ import variables.Vector3D;
 @SuppressWarnings("rawtypes")
 public class MeshPart extends SuperObject
 {
-	private Theta 		t;
-	
-	private Matrix4x4	matTrans;
-	private Matrix4x4 	matWorld;
-	
 	public MeshPart(Panel pn)
 	{
 		this.pn = pn;
 
-		t 	 = new Theta(0, 0, 0);
 		tris = new Vector<>();
 		
-		offset	 = new Vector3D(0, 0, 3);
-		location = new Vector3D(0, 0, 3);
-		
-		matTrans = Matrix4x4.createTranslation(0, 0, 0); 
-		matWorld = Matrix4x4.create();  
+		offset			= new Vector3D(0, 0, 0);
+		anchoredPoint	= new Vector3D(0, 0, 0);
+		location 		= new Vector3D(0, 0, 0);
 		
 		clr  = Color.WHITE;
 		name = "Mesh Part";
@@ -74,7 +66,7 @@ public class MeshPart extends SuperObject
 	
 	public void generate()
 	{
-		Theta.updateRotation(t);
+		update();
 		
 		for(Triangle2D tri:tris)
 		{
@@ -82,13 +74,13 @@ public class MeshPart extends SuperObject
 			Triangle2D triTransformed = new Triangle2D(Vector3D.zero(), Vector3D.zero(), Vector3D.zero());
 			Triangle2D triView 		  = new Triangle2D(Vector3D.zero(), Vector3D.zero(), Vector3D.zero());
 			
-			triTransformed.p[0] = Matrix4x4.MultiplyMatrixVector(matWorld, tri.p[0]);
-			triTransformed.p[1] = Matrix4x4.MultiplyMatrixVector(matWorld, tri.p[1]);
-			triTransformed.p[2] = Matrix4x4.MultiplyMatrixVector(matWorld, tri.p[2]);
+			triTransformed.p[0] = Matrix4x4.MultiplyMatrixVector(matWorld, Vector3D.Add(tri.p[0], Vector3D.Mul(anchoredPoint, scale)));
+			triTransformed.p[1] = Matrix4x4.MultiplyMatrixVector(matWorld, Vector3D.Add(tri.p[1], Vector3D.Mul(anchoredPoint, scale)));
+			triTransformed.p[2] = Matrix4x4.MultiplyMatrixVector(matWorld, Vector3D.Add(tri.p[2], Vector3D.Mul(anchoredPoint, scale)));
 			
-			triTransformed.p[0] = Vector3D.Mul(Vector3D.Add(triTransformed.p[0], offset), scale);
-			triTransformed.p[1] = Vector3D.Mul(Vector3D.Add(triTransformed.p[1], offset), scale);
-			triTransformed.p[2] = Vector3D.Mul(Vector3D.Add(triTransformed.p[2], offset), scale);
+			triTransformed.p[0] = Vector3D.Add(Vector3D.Mul(triTransformed.p[0], scale), offset);
+			triTransformed.p[1] = Vector3D.Add(Vector3D.Mul(triTransformed.p[1], scale), offset);
+			triTransformed.p[2] = Vector3D.Add(Vector3D.Mul(triTransformed.p[2], scale), offset);
 			
 			Vector3D line1  = Vector3D.Line(triTransformed.p[1], triTransformed.p[0]);
 			Vector3D line2  = Vector3D.Line(triTransformed.p[2], triTransformed.p[0]);
@@ -105,7 +97,6 @@ public class MeshPart extends SuperObject
 			for(int i = 0; i < (int)result.get("n_tris").get(0); i++)
 			{
 				Triangle2D rTri = (Triangle2D)result.get("Triangles").get(i);
-				
 				
 				triProjected.p[0] = Matrix4x4.MultiplyMatrixVector(mat, rTri.p[0]);
 				triProjected.p[1] = Matrix4x4.MultiplyMatrixVector(mat, rTri.p[1]);
@@ -131,8 +122,10 @@ public class MeshPart extends SuperObject
 				
 				if(Vector3D.DotProduct(normal, camRay) < 0)		// < 0 : view outside surface		|| > 0 : view inside surface
 				{
-					Vector3D dL = Vector3D.Normalise(Vector3D.Add(pn.plr.camera.p, pn.lightDirection));
-
+					Vector3D dL = Vector3D.Normalise(pn.light.direction);
+					if(pn.light.state.equals("night"))
+						dL = Vector3D.Normalise(Vector3D.Mul(pn.light.direction, -1));
+					
 					double dp = Vector3D.DotProduct(normal, dL);
 					
 					triProjected.LightLevel = dp;
@@ -153,9 +146,9 @@ public class MeshPart extends SuperObject
 		
 		for(Triangle2D tri: tris)
 		{
-			coordinatesX.add(tri.p[0].x);	coordinatesY.add(tri.p[0].y);	coordinatesZ.add(tri.p[0].z);
-			coordinatesX.add(tri.p[1].x);   coordinatesY.add(tri.p[1].y);   coordinatesZ.add(tri.p[1].z);
-			coordinatesX.add(tri.p[2].x);   coordinatesY.add(tri.p[2].y);   coordinatesZ.add(tri.p[2].z);
+			coordinatesX.add(tri.p[0].x * scale);	coordinatesY.add(tri.p[0].y * scale);	coordinatesZ.add(tri.p[0].z * scale);
+			coordinatesX.add(tri.p[1].x * scale);   coordinatesY.add(tri.p[1].y * scale);   coordinatesZ.add(tri.p[1].z * scale);
+			coordinatesX.add(tri.p[2].x * scale);   coordinatesY.add(tri.p[2].y * scale);   coordinatesZ.add(tri.p[2].z * scale);
 		}
 		
 		coordinatesX.sort(Comparator.reverseOrder());
@@ -176,14 +169,7 @@ public class MeshPart extends SuperObject
 			configuration.run();
 		}
 		
-		t.x = Math.toRadians(rX);
-		t.y = Math.toRadians(rY);
-		t.z = Math.toRadians(rZ);
-		
-		matWorld = Matrix4x4.Mul(Matrix4x4.Mul(t.matRotZ, t.matRotX), t.matRotY);
-		matWorld = Matrix4x4.Mul(matWorld, matTrans);
-		
-		UpdateMatrix();
+		UpdateMatrix(rX, rY, rZ);
 	}
 	
 	public void LoadFromObjectFile(String name)

@@ -7,6 +7,7 @@ import java.awt.Graphics2D;
 import java.awt.Toolkit;
 import java.time.Duration;
 import java.time.Instant;
+import java.util.HashMap;
 import java.util.Vector;
 
 import javax.swing.JPanel;
@@ -14,6 +15,7 @@ import javax.swing.JPanel;
 import entity.Player;
 import inputSystem.InputHandler;
 import objects.MeshPart;
+import objects.SuperObject;
 import variables.Matrix4x4;
 import variables.Vector3D;
 
@@ -45,11 +47,11 @@ public class Panel extends JPanel implements Runnable
 	public Thread	  thr;
 	public Graphics2D g2;
 	
-	public Vector3D lightDirection = new Vector3D(0, 0, 0);
+	public InputHandler		input	= new InputHandler();
 	
-	public InputHandler input	= new InputHandler();
-	public Player		plr 	= new Player(this);
-	public AssetManager obj 	= new AssetManager(this);
+	public AssetManager 	obj 	= new AssetManager(this);
+	public Player			plr		= new Player(this);
+	public LightEnvironment light 	= new LightEnvironment(this);
 	
 	public Panel()
 	{
@@ -65,7 +67,7 @@ public class Panel extends JPanel implements Runnable
 //		this.addMouseWheelListener  (mWheel);
 		this.setFocusable    		(true);
 		
-		plr.camera.p.y = -px*2 - 5;
+//		plr.camera.p.y = -px*2 - 5;
 //		plr.camera.rotation.y = Math.toRadians(90);
 	}
 	
@@ -74,9 +76,11 @@ public class Panel extends JPanel implements Runnable
 		root.screen[0] = screen.getWidth ();
 		root.screen[1] = screen.getHeight();
 		
-		plr.update();
+		light.rX -= 0.1;
+		light.rY += 0.1/3;
 		
-		obj.assetsUpdate();
+		light.update();
+		plr.update();
 	}
 
 	@Override
