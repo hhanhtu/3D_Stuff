@@ -24,40 +24,40 @@ public class Camera
 	
 	public Panel pn;
 	
-	public double fN 	 = 0.1;
-	public double fF 	 = 1000;
-	public double AR 	 = 0;
-	public double fFov	 = 90;
-	public double fFovRad= Math.toRadians(fFov);
+	public static double fN 	 = 0.1;
+	public static double fF 	 = 1000;
+	public static double AR 	 = 0;
+	public static double fFov	 = 90;
+	public static double fFovRad= Math.toRadians(fFov);
 	
 	public Camera(Panel pn)
 	{
 		this.pn = pn;
 		
-		p		 = new Vector3D (0, 0, 0);
+		p		 = Vector3D.zero;
 		rotation = new Theta	(0, 0, 0);
 		
-		screenAdjust = new Vector3D(pn.root.panel[0]/2, pn.root.panel[1]/2, 0);
+		screenAdjust = new Vector3D(Panel.root.panel[0]/2, Panel.root.panel[1]/2, 0);
 		
-		face.put("look"	, new Vector3D(0, 0, 1));
-		face.put("up"	, new Vector3D(0, 1, 0));
-		face.put("right", new Vector3D(1, 0, 0));
+		face.put("look"	, Vector3D.look	);
+		face.put("up"	, Vector3D.up	);
+		face.put("right", Vector3D.right);
 	}
 	
 	public void update()
 	{
-		AR		 = pn.root.panel[1]/pn.root.panel[0];
+		AR		 = Panel.root.panel[1]/Panel.root.panel[0];
 		fFovRad  = Math.toRadians(fFov);
 		
 		Theta.updateRotation(rotation);
 		
-		vUp = new Vector3D(0, 1, 0);
+		vUp = Vector3D.up;
 		
 		Matrix4x4 camXYZ = Matrix4x4.Mul(Matrix4x4.Mul(rotation.matRotX, rotation.matRotY), rotation.matRotZ);
 		
-		face.put("look"	, Matrix4x4.MultiplyMatrixVector(camXYZ, new Vector3D(0, 0, 1)));
-		face.put("up"	, Matrix4x4.MultiplyMatrixVector(camXYZ, new Vector3D(0, 1, 0)));
-		face.put("right", Matrix4x4.MultiplyMatrixVector(camXYZ, new Vector3D(1, 0, 0)));
+		face.put("look"	, Matrix4x4.MultiplyMatrixVector(camXYZ, Vector3D.look	));
+		face.put("up"	, Matrix4x4.MultiplyMatrixVector(camXYZ, Vector3D.up	));
+		face.put("right", Matrix4x4.MultiplyMatrixVector(camXYZ, Vector3D.right	));
 		
 		vT   = Vector3D.Add(p, face.get("look"));
 		

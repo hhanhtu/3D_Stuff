@@ -9,10 +9,6 @@ public class Main
 
 	public static void main(String[] args) 
 	{
-		/*
-					// RESEARCH EVERYTHING BEFORE CONTINUED //
-		*/
-		
 		JFrame root = new JFrame();
 		root.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		root.setResizable			 (false);
@@ -20,11 +16,11 @@ public class Main
 		
 		Panel pn= new Panel();
 		root.add (pn);
+		root.setVisible			  (true);
 		
 		root.pack();
 		
 		root.setLocationRelativeTo(null);
-		root.setVisible			  (true);
 		
 		pn.startThread();
 	}

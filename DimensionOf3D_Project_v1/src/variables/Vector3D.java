@@ -1,8 +1,5 @@
 package variables;
 
-import java.awt.BasicStroke;
-import java.awt.Color;
-import java.awt.Graphics2D;
 import java.util.HashMap;
 import java.util.Vector;
 
@@ -11,6 +8,13 @@ import objects.Triangle2D;
 public class Vector3D
 {
 	public double x, y, z, w;
+	
+	public static Vector3D zero = new Vector3D(0, 0, 0);
+	public static Vector3D one  = new Vector3D(1, 1, 1);
+	
+	public static Vector3D look	 = new Vector3D(0, 0, 1);
+	public static Vector3D right = new Vector3D(1, 0, 0);
+	public static Vector3D up	 = new Vector3D(0, 1, 0);
 	
 	public Vector3D(double x, double y, double z)
 	{
@@ -87,6 +91,7 @@ public class Vector3D
 		{
 			Triangle2D out1 = new Triangle2D(in.p[0] ,in.p[1], in.p[2]);
 			out1.clr = in.clr;
+			out1.parent = in.parent;
 			
 			ntri.add(1);
 			tris.add(out1);
@@ -99,6 +104,7 @@ public class Vector3D
 		{
 			Triangle2D out1 = new Triangle2D(in.p[0] ,in.p[1], in.p[2]);
 			out1.clr = in.clr;
+			out1.parent = in.parent;
 			
 			out1.p[0] = inPoint[0];
 			out1.p[1] = Vector3D.IntersectPlane(planeP, planeN, inPoint[0], outPoint[0]);
@@ -118,6 +124,9 @@ public class Vector3D
 
 			out1.clr = in.clr;
 			out2.clr = in.clr;
+			
+			out1.parent = in.parent;
+			out2.parent = in.parent;
 			
 			ntri.add(2);
 			tris.add(out1);
@@ -216,14 +225,5 @@ public class Vector3D
 	public static Vector3D DivideVector(Vector3D v1, Vector3D v2)
 	{
 		return new Vector3D(v1.x / v2.x, v1.y / v2.y, v1.z / v2.z);
-	}
-	
-	public static Vector3D zero()
-	{
-		return new Vector3D(0, 0, 0);
-	}
-	public static Vector3D one()
-	{
-		return new Vector3D(1, 1, 1);
 	}
 }

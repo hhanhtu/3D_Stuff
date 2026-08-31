@@ -8,7 +8,7 @@ import variables.Vector3D;
 
 public class Presets {
 	
-	public static Vector<MeshPart> platform(Panel pn)
+	public static Vector<MeshPart> platform()
 	{
 		Vector<MeshPart> m = new Vector<>();
 		
@@ -16,7 +16,7 @@ public class Presets {
 		{
 			if(k != 0)
 			{
-				MeshPart floor1 = new MeshPart(pn);
+				MeshPart floor1 = new MeshPart();
 				floor1.LoadFromObjectFile("flatFloor");
 				floor1.rX = 180;
 				floor1.scale = 2;
@@ -24,7 +24,7 @@ public class Presets {
 				floor1.offset = new Vector3D(k*floor1.size().x*2, 1, 0);
 				floor1.clr = Color.WHITE;
 				
-				MeshPart floor2 = new MeshPart(pn);
+				MeshPart floor2 = new MeshPart();
 				floor2.LoadFromObjectFile("flatFloor");
 				floor2.rX = 180;
 				floor2.scale = 2;
@@ -32,7 +32,7 @@ public class Presets {
 				floor2.offset = new Vector3D(0, 1, k*floor2.size().z*2);
 				floor2.clr = Color.WHITE;
 				
-				MeshPart floor3 = new MeshPart(pn);
+				MeshPart floor3 = new MeshPart();
 				floor3.LoadFromObjectFile("flatFloor");
 				floor3.rX = 180;
 				floor3.scale = 2;
@@ -40,7 +40,7 @@ public class Presets {
 				floor3.offset = new Vector3D(k*floor1.size().x*2, 1, k*floor3.size().z*2);
 				floor3.clr = Color.GRAY;
 				
-				MeshPart floor4 = new MeshPart(pn);
+				MeshPart floor4 = new MeshPart();
 				floor4.LoadFromObjectFile("flatFloor");
 				floor4.rX = 180;
 				floor4.scale = 2;
@@ -55,7 +55,7 @@ public class Presets {
 			}
 		}
 		
-		MeshPart floor1 = new MeshPart(pn);
+		MeshPart floor1 = new MeshPart();
 		floor1.LoadFromObjectFile("flatFloor");
 		floor1.rX = 180;
 		floor1.scale = 2;

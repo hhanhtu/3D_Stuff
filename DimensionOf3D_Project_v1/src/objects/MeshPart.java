@@ -1,40 +1,43 @@
 package objects;
 
-import java.awt.BasicStroke;
 import java.awt.Color;
-import java.awt.Graphics2D;
 import java.io.BufferedReader;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Vector;
-import org.joml.*;
-import java.lang.Math;
 
+import main.AssetManager;
 import main.Panel;
-import variables.Matrix4x4;
-import variables.Theta;
 import variables.Vector3D;
 
 @SuppressWarnings("rawtypes")
 public class MeshPart extends SuperObject
 {
-	public MeshPart(Panel pn)
+	public HashMap<String, Vector> result = new HashMap<>();
+	private Vector<Triangle2D> trs			 = new Vector<>();
+	private Vector<Triangle2D> triToRender	 = new Vector<>();
+	
+	private HashMap<String, Vector> c0 = new HashMap<>();
+	private HashMap<String, Vector> c1 = new HashMap<>();
+	private HashMap<String, Vector> c2 = new HashMap<>();
+	private HashMap<String, Vector> c3 = new HashMap<>();
+	
+	private Vector<Double> coordinatesX = new Vector<>();
+	private Vector<Double> coordinatesY = new Vector<>();
+	private Vector<Double> coordinatesZ = new Vector<>();
+	
+	public MeshPart()
 	{
-		this.pn = pn;
-
 		tris = new Vector<>();
 		
 		offset			= new Vector3D(0, 0, 0);
 		anchoredPoint	= new Vector3D(0, 0, 0);
-		location 		= new Vector3D(0, 0, 0);
 		
 		clr  = Color.WHITE;
 		name = "Mesh Part";
-		size = Vector3D.zero();
+		size = Vector3D.zero;
 		scale  = 1;
 		
 		rX = 0;
@@ -64,85 +67,82 @@ public class MeshPart extends SuperObject
 		tris.add(new Triangle2D(new Vector3D(1, 0, 1), new Vector3D(0, 0, 0), new Vector3D(1, 0, 0)));
 	 */
 	
-	public void generate()
+	public void generate(AssetManager obj)
 	{
 		update();
 		
-		for(Triangle2D tri:tris)
+		result.clear();
+		triToRender.clear();
+		c0.clear(); c1.clear(); c2.clear(); c3.clear();
+		
+		int id = 0;
+		
+		Triangle2D.Transformed3Dto2D(tris, this, obj, triToRender);
+		
+		for(Triangle2D tri: triToRender)
 		{
-			Triangle2D triProjected   = new Triangle2D(Vector3D.zero(), Vector3D.zero(), Vector3D.zero());
-			Triangle2D triTransformed = new Triangle2D(Vector3D.zero(), Vector3D.zero(), Vector3D.zero());
-			Triangle2D triView 		  = new Triangle2D(Vector3D.zero(), Vector3D.zero(), Vector3D.zero());
+			tri.id = id;
 			
-			triTransformed.p[0] = Matrix4x4.MultiplyMatrixVector(matWorld, Vector3D.Add(tri.p[0], Vector3D.Mul(anchoredPoint, scale)));
-			triTransformed.p[1] = Matrix4x4.MultiplyMatrixVector(matWorld, Vector3D.Add(tri.p[1], Vector3D.Mul(anchoredPoint, scale)));
-			triTransformed.p[2] = Matrix4x4.MultiplyMatrixVector(matWorld, Vector3D.Add(tri.p[2], Vector3D.Mul(anchoredPoint, scale)));
+			trs.clear();
+			int nTrsAdd = 0;
 			
-			triTransformed.p[0] = Vector3D.Add(Vector3D.Mul(triTransformed.p[0], scale), offset);
-			triTransformed.p[1] = Vector3D.Add(Vector3D.Mul(triTransformed.p[1], scale), offset);
-			triTransformed.p[2] = Vector3D.Add(Vector3D.Mul(triTransformed.p[2], scale), offset);
+			trs.addLast(tri);
+			int nTris = 1;
 			
-			Vector3D line1  = Vector3D.Line(triTransformed.p[1], triTransformed.p[0]);
-			Vector3D line2  = Vector3D.Line(triTransformed.p[2], triTransformed.p[0]);
-			Vector3D normal = Vector3D.Normalise(Vector3D.Cross(line1, line2));
-			
-			triView.p[0] = Matrix4x4.MultiplyMatrixVector(pn.plr.camera.vCam, triTransformed.p[0]);
-			triView.p[1] = Matrix4x4.MultiplyMatrixVector(pn.plr.camera.vCam, triTransformed.p[1]);
-			triView.p[2] = Matrix4x4.MultiplyMatrixVector(pn.plr.camera.vCam, triTransformed.p[2]);
-			
-			HashMap<String, Vector> result =  Vector3D.TriangleClippingInPlane(new Vector3D(0, 0, .05), new Vector3D(0, 0, 1), triView);
-			
-			pn.obj.GLOBALTRIANGLETRANFORMED.add(triTransformed);
-			
-			for(int i = 0; i < (int)result.get("n_tris").get(0); i++)
+			for(int p = 0; p < 4; p++)
 			{
-				Triangle2D rTri = (Triangle2D)result.get("Triangles").get(i);
-				
-				triProjected.p[0] = Matrix4x4.MultiplyMatrixVector(mat, rTri.p[0]);
-				triProjected.p[1] = Matrix4x4.MultiplyMatrixVector(mat, rTri.p[1]);
-				triProjected.p[2] = Matrix4x4.MultiplyMatrixVector(mat, rTri.p[2]);
-				
-				triProjected.p[0] = Vector3D.Div(triProjected.p[0], triProjected.p[0].w);
-				triProjected.p[1] = Vector3D.Div(triProjected.p[1], triProjected.p[1].w);
-				triProjected.p[2] = Vector3D.Div(triProjected.p[2], triProjected.p[2].w);
-				
-				triProjected.p[0] = Vector3D.Add(triProjected.p[0], pn.plr.camera.viewOffset);
-				triProjected.p[1] = Vector3D.Add(triProjected.p[1], pn.plr.camera.viewOffset);
-				triProjected.p[2] = Vector3D.Add(triProjected.p[2], pn.plr.camera.viewOffset);
-				
-				triProjected.p[0].x *= pn.root.panel[0]/2;
-				triProjected.p[1].x *= pn.root.panel[0]/2;
-				triProjected.p[2].x *= pn.root.panel[0]/2;
-				
-				triProjected.p[0].y *= pn.root.panel[1]/2;
-				triProjected.p[1].y *= pn.root.panel[1]/2;
-				triProjected.p[2].y *= pn.root.panel[1]/2;
-				
-				Vector3D camRay = Vector3D.Sub(triTransformed.p[0], pn.plr.camera.p);
-				
-				if(Vector3D.DotProduct(normal, camRay) < 0)		// < 0 : view outside surface		|| > 0 : view inside surface
+				while(nTris > 0)
 				{
-					Vector3D dL = Vector3D.Normalise(pn.light.direction);
-					if(pn.light.state.equals("night"))
-						dL = Vector3D.Normalise(Vector3D.Mul(pn.light.direction, -1));
+					Triangle2D t = trs.getFirst();
+					trs.removeFirst();
+					nTris--;
 					
-					double dp = Vector3D.DotProduct(normal, dL);
+					c0 = Vector3D.TriangleClippingInPlane(SuperObject.topPlane		, Panel.plane.topPlane		, t);
+					c1 = Vector3D.TriangleClippingInPlane(SuperObject.bottomPlane	, Panel.plane.bottomPlane	, t);
+					c2 = Vector3D.TriangleClippingInPlane(SuperObject.rightPlane	, Panel.plane.rightPlane	, t);
+					c3 = Vector3D.TriangleClippingInPlane(SuperObject.leftPlane		, Panel.plane.leftPlane		, t);
 					
-					triProjected.LightLevel = dp;
-					triProjected.parent = name;
-					triProjected.clr = clr;
-					
-					pn.obj.GLOBALTRIANGLEFRAMES.addLast(triProjected);
+					switch(p)
+					{
+					case 0: nTrsAdd = (int)c0.get("n_tris").get(0);
+						for(int j = 0; j < nTrsAdd; j++) {
+							trs.addLast(Triangle2D.getTrianglesFromClipResult(c0, j));
+							obj.GLOBALTRIANGLEFRAMES.add(trs.getLast());
+							}
+					break;
+					case 1: nTrsAdd = (int)c1.get("n_tris").get(0);
+						for(int j = 0; j < nTrsAdd; j++) {
+							trs.addLast(Triangle2D.getTrianglesFromClipResult(c1, j));
+							obj.GLOBALTRIANGLEFRAMES.add(trs.getLast());
+							}
+					break;
+					case 2: nTrsAdd = (int)c2.get("n_tris").get(0);
+						for(int j = 0; j < nTrsAdd; j++) {
+							trs.addLast(Triangle2D.getTrianglesFromClipResult(c2, j));
+							obj.GLOBALTRIANGLEFRAMES.add(trs.getLast());
+							}
+					break;
+					case 3: nTrsAdd = (int)c3.get("n_tris").get(0);
+						for(int j = 0; j < nTrsAdd; j++) {
+							trs.addLast(Triangle2D.getTrianglesFromClipResult(c3, j));
+							obj.GLOBALTRIANGLEFRAMES.add(trs.getLast());
+							}
+					break;
+					}
 				}
+				
+				nTris = trs.size();
 			}
+			
+			id++;
 		}
 	}
 	
 	public Vector3D size()
 	{
-		Vector<Double> coordinatesX = new Vector<>();
-		Vector<Double> coordinatesY = new Vector<>();
-		Vector<Double> coordinatesZ = new Vector<>();
+		coordinatesX.clear();
+		coordinatesY.clear();
+		coordinatesZ.clear();
 		
 		for(Triangle2D tri: tris)
 		{

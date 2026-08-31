@@ -10,8 +10,6 @@ import variables.Matrix4x4;
 import variables.Theta;
 
 public class LightEnvironment {
-	private Panel pn;
-	
 	public class Clock
 	{
 		public double h, m, s;
@@ -24,6 +22,7 @@ public class LightEnvironment {
 	}
 	
 	public  Vector3D direction;
+	public  Vector3D anchoredPoint;
 	private Theta	 rotation ;
 	
 	public double rX, rY, rZ;
@@ -36,27 +35,26 @@ public class LightEnvironment {
 	
 	public LightEnvironment(Panel pn)
 	{
-		this.pn = pn;
-		
-		rotation  = new Theta	(0, 0, 0);
-		direction = new Vector3D(0, 0, -150);
+		rotation  	  = new Theta	(0, 0, 0);
+		direction	  = new Vector3D(0, 0, -150);
+		anchoredPoint = new Vector3D(0, 0, -150);
 		
 		rX = 0;
 		rY = 0;
 		rZ = 0;
 		
-		sun = new MeshPart(pn);
+		sun = new MeshPart();
 		sun.LoadFromObjectFile("ball_lowQuality");
 		sun.offset = direction;
 		sun.clr = new Color(255, 255, 150);
-		sun.scale = 10;
+		sun.scale = 5;
 		sun.name = "Sun";
 		
-		moon = new MeshPart(pn);
+		moon = new MeshPart();
 		moon.LoadFromObjectFile("ball_lowQuality");
 		moon.offset = direction;
-		moon.clr = new Color(150, 150, 255);
-		moon.scale = 10;
+		moon.clr = new Color(75, 75, 255);
+		moon.scale = 5;
 		moon.name = "Moon";
 		
 		sun.configuration = () -> {
@@ -75,8 +73,6 @@ public class LightEnvironment {
 	
 	public void update()
 	{
-		direction = new Vector3D(0, 0, -150);
-		
 		state = "day";
 		
 		if(Math.abs(rX) >= 180)
@@ -94,7 +90,7 @@ public class LightEnvironment {
 		Theta.updateRotation(rotation);
 		
 		Matrix4x4 matRotXYZ = Matrix4x4.Mul(Matrix4x4.Mul(rotation.matRotX, rotation.matRotY), rotation.matRotZ);
-		direction = Matrix4x4.MultiplyMatrixVector(matRotXYZ, direction);
+		direction = Matrix4x4.MultiplyMatrixVector(matRotXYZ, anchoredPoint);
 		
 		sun.offset = direction;
 	}

@@ -6,7 +6,6 @@ import variables.Vector3D;
 
 public class Player extends Entity
 {
-	
 	private boolean wireframe = false;
 	private int 	wft 	  = 0;
 	
@@ -22,6 +21,8 @@ public class Player extends Entity
 	
 	public void update()
 	{
+		speed = pn.FPS/14;
+		
 		UpdateUserInput();
 		
 		camera.update();
@@ -73,16 +74,16 @@ public class Player extends Entity
 			camera.p =  Vector3D.Sub(camera.p, forward);
 		
 		if(input.keyCode.indexOf("J") != -1)
-			camera.rotation.y -= Math.toRadians(speed*2);
+			camera.rotation.y -= Math.toRadians(speed);
 		if(input.keyCode.indexOf("L") != -1)
-			camera.rotation.y += Math.toRadians(speed*2);
+			camera.rotation.y += Math.toRadians(speed);
 		
 		if(input.keyCode.indexOf("I") != -1)
-			if(camera.rotation.x + Math.toRadians(speed*2) <= Math.toRadians(90))
-					camera.rotation.x += Math.toRadians(speed*2);
+			if(camera.rotation.x + Math.toRadians(speed) <= Math.toRadians(90))
+					camera.rotation.x += Math.toRadians(speed);
 		if(input.keyCode.indexOf("K") != -1)
-			if(camera.rotation.x - Math.toRadians(speed*2) >= Math.toRadians(-90))
-				camera.rotation.x -= Math.toRadians(speed*2);
+			if(camera.rotation.x - Math.toRadians(speed) >= Math.toRadians(-90))
+				camera.rotation.x -= Math.toRadians(speed);
 	}
 	
 }

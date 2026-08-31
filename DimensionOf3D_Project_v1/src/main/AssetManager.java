@@ -1,9 +1,10 @@
 package main;
 
 import java.awt.Color;
-import java.awt.Graphics2D;
+import java.awt.Graphics;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Map;
 import java.util.Vector;
 
@@ -21,8 +22,9 @@ public class AssetManager
 	
 	public HashMap<String, Vector> mesh = new HashMap<>();
 	public boolean				   WIREFRAME = false;
-	public Vector<Triangle2D> 	   GLOBALTRIANGLEFRAMES 	= new Vector<>();
-	public Vector<Triangle2D> 	   GLOBALTRIANGLETRANFORMED = new Vector<>();
+	
+	private Vector<MeshPart>		obj 					= new Vector<>();
+	public  Vector<Triangle2D>		GLOBALTRIANGLEFRAMES 	= new Vector<>();
 	
 	public AssetManager(Panel pn)
 	{
@@ -35,15 +37,51 @@ public class AssetManager
 	
 	public void loadAsset()
 	{
-		Vector<MeshPart> m = Presets.platform(pn);
+//		Vector<MeshPart> m = new Vector<>();
+//		
+//		for(int k = -1; k <= 1; k++)
+//		{
+//			if(k != 0)
+//			{
+//				for(int v = -1; v <= 1; v++)
+//				{
+//					if(v != 0)
+//					{
+//						for(int j = 1; j < 10; j++)
+//						{
+//							for(int i = 1; i < 10; i++)
+//							{
+//								MeshPart c = new MeshPart(pn);
+//								c.LoadFromObjectFile("cube");
+//								c.scale = 3;
+//								c.offset = new Vector3D(i*k*c.size().x*2 + 5, j*v*c.size().y*2 + 5, 0);
+//								if(i%2 == 0)
+//									c.clr = Color.GRAY;
+//								
+//								m.add(c);
+//							}
+//						}
+//					}
+//				}
+//			}
+//		}
+		
+		Vector<MeshPart> m = Presets.platform();
 
+		MeshPart cube = new MeshPart();
+		cube.LoadFromObjectFile("cube");
+		cube.clr = Color.RED;
+		cube.scale = 2;
+		cube.offset = new Vector3D(0, -20, 0);
+		m.add(cube);
+		
 		for(int k = -1; k <= 1; k++)
 		{
 			if(k != 0)
 			{
 				for(int i = 0; i < 2; i++)
 				{
-					MeshPart pillar1 = new MeshPart(pn);
+					MeshPart pillar1 = new MeshPart();
 					pillar1.LoadFromObjectFile("pillar");
 					pillar1.clr = Color.GREEN;
 					pillar1.scale = 2;
@@ -53,7 +91,7 @@ public class AssetManager
 					
 					if(i%2 == 0) pillar1.clr = Color.BLUE;
 					
-					MeshPart pillar2 = new MeshPart(pn);
+					MeshPart pillar2 = new MeshPart();
 					pillar2.LoadFromObjectFile("pillar");
 					pillar2.clr = Color.GREEN;
 					pillar2.scale = 2;
@@ -71,19 +109,22 @@ public class AssetManager
 		
 		mesh.put("Workspace", m);
 	}
+
+	public void updateAll()
+	{
+	}
 	
-	public void generateAll(Graphics2D g2)
+	public void generateAll(Graphics g)
 	{
 		GLOBALTRIANGLEFRAMES.clear();
+		obj.clear();
 		
-		Vector<MeshPart> obj  = new Vector<>();
-
 		for(Map.Entry<String, Vector> i: mesh.entrySet())
 		{
 			for(Object o: i.getValue())
 			{
 				MeshPart m = (MeshPart)o;
-				m.generate();
+				m.generate(this);
 				
 				obj.add(m);
 			}
@@ -99,110 +140,13 @@ public class AssetManager
 			return 0;
 		});
 		
-		for(Triangle2D triToRaster: GLOBALTRIANGLEFRAMES)
+		for(Triangle2D tri: GLOBALTRIANGLEFRAMES)
 		{
-			int r = triToRaster.clr.getRed();
-			int g = triToRaster.clr.getGreen();
-			int b = triToRaster.clr.getBlue();
-			
-			if(triToRaster.parent != "Sun" && triToRaster.parent != "Moon")
-			{
-				if(pn.light.state == "night")
-				{
-					try {
-						triToRaster.clr = new Color(
-								(int)(r/pn.light.DARKNESS	 *triToRaster.LightLevel),
-								(int)(g/pn.light.DARKNESS	 *triToRaster.LightLevel),
-								(int)(b/(pn.light.DARKNESS/2)*triToRaster.LightLevel)
-								);
-					} catch(Exception e)
-					{
-						triToRaster.clr = new Color(
-								(int)(0*triToRaster.LightLevel),
-								(int)(0*triToRaster.LightLevel),
-								(int)(0*triToRaster.LightLevel)
-								);
-					}
-				} else
-				{
-					try {
-						triToRaster.clr = new Color(
-								(int)(r*triToRaster.LightLevel),
-								(int)(g*triToRaster.LightLevel),
-								(int)(b*triToRaster.LightLevel)
-								);
-					} catch(Exception e)
-					{
-						triToRaster.clr = new Color(
-								(int)(0*triToRaster.LightLevel),
-								(int)(0*triToRaster.LightLevel),
-								(int)(0*triToRaster.LightLevel)
-								);
-					}
-				}
-			}
-			
-			Vector<Triangle2D> trs = new Vector<>();
-			
-			trs.addLast(triToRaster);
-			int nTris = 1;
-			
-			for(int p = 0; p < 4; p++)
-			{
-				int nTrsAdd = 0;
-				
-				while(nTris > 0)
-				{
-					Triangle2D t = trs.getFirst();
-					trs.removeFirst();
-					nTris--;
-					
-					HashMap<String, Vector> c0 = Vector3D.TriangleClippingInPlane(SuperObject.topPlane(pn)		, new Vector3D( 0, 1, 1), t);
-					HashMap<String, Vector> c1 = Vector3D.TriangleClippingInPlane(SuperObject.bottomPlane(pn)	, new Vector3D( 0,-1, 1), t);
-					HashMap<String, Vector> c2 = Vector3D.TriangleClippingInPlane(SuperObject.rightPlane(pn)	, new Vector3D( 1, 0, 1), t);
-					HashMap<String, Vector> c3 = Vector3D.TriangleClippingInPlane(SuperObject.leftPlane(pn)		, new Vector3D(-1, 0, 1), t);
-					
-					switch(p)
-					{
-					case 0: nTrsAdd = (int)c0.get("n_tris").get(0);
-						for(int j = 0; j < nTrsAdd; j++) {
-							trs.addLast(Triangle2D.getTrianglesFromClipResult(c0, j));
-							Triangle2D.fill(g2, Triangle2D.getTrianglesFromClipResult(c0, j));
-							if(WIREFRAME)
-								Triangle2D.draw(g2, Triangle2D.getTrianglesFromClipResult(c0, j), Color.ORANGE);
-							}
-					break;
-					case 1: nTrsAdd = (int)c1.get("n_tris").get(0);
-						for(int j = 0; j < nTrsAdd; j++) {
-							trs.addLast(Triangle2D.getTrianglesFromClipResult(c1, j));
-							Triangle2D.fill(g2, Triangle2D.getTrianglesFromClipResult(c1, j));
-							if(WIREFRAME)
-								Triangle2D.draw(g2, Triangle2D.getTrianglesFromClipResult(c1, j), Color.ORANGE);
-							}
-					break;
-					case 2: nTrsAdd = (int)c2.get("n_tris").get(0);
-						for(int j = 0; j < nTrsAdd; j++) {
-							trs.addLast(Triangle2D.getTrianglesFromClipResult(c2, j));
-							Triangle2D.fill(g2, Triangle2D.getTrianglesFromClipResult(c2, j));
-							if(WIREFRAME)
-								Triangle2D.draw(g2, Triangle2D.getTrianglesFromClipResult(c2, j), Color.ORANGE);
-							}
-					break;
-					case 3: nTrsAdd = (int)c3.get("n_tris").get(0);
-						for(int j = 0; j < nTrsAdd; j++) {
-							trs.addLast(Triangle2D.getTrianglesFromClipResult(c3, j));
-							Triangle2D.fill(g2, Triangle2D.getTrianglesFromClipResult(c3, j));
-							if(WIREFRAME)
-								Triangle2D.draw(g2, Triangle2D.getTrianglesFromClipResult(c3, j), Color.ORANGE);
-							}
-					break;
-					}
-				}
-				
-				nTris = trs.size();
-			}
+			Triangle2D.fill(g, tri);
+			if(WIREFRAME)
+				Triangle2D.draw(g, tri, Color.ORANGE);
 		}
-	
+		
 		if(WIREFRAME)
 		{
 			for(MeshPart m: obj)
@@ -210,11 +154,12 @@ public class AssetManager
 				Vector3D pointTransformed = Matrix4x4.MultiplyMatrixVector(SuperObject.matWorld, m.offset);
 				Vector3D pointViewed	  = Matrix4x4.MultiplyMatrixVector(pn.plr.camera.vCam, pointTransformed);
 				Vector3D point 			  = Matrix4x4.MultiplyMatrixVector(SuperObject.mat, pointViewed);
+				
 				point = Vector3D.Div(point, point.w);
 				point = Vector3D.Add(point, pn.plr.camera.viewOffset);
 				
-				pn.g2.setColor(Color.RED);
-				pn.g2.fillOval((int)(point.x * pn.root.panel[0]/2 - 4), (int)(point.y * pn.root.panel[1]/2  - 4), 8, 8);
+				g.setColor(Color.RED);
+				g.fillOval((int)(point.x * Panel.root.panel[0]/2 - 4), (int)(point.y * Panel.root.panel[1]/2  - 4), 8, 8);
 			}
 		}
 	}

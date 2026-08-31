@@ -1,10 +1,12 @@
 package main;
 
+import java.awt.Canvas;
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.Toolkit;
+import java.awt.image.BufferStrategy;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.HashMap;
@@ -19,21 +21,30 @@ import objects.SuperObject;
 import variables.Matrix4x4;
 import variables.Vector3D;
 
-public class Panel extends JPanel implements Runnable
+public class Panel extends Canvas implements Runnable
 {
-	
 	private static final long serialVersionUID = -8067777132710632548L;
 	
-	public class Window
+	public static class Window
 	{
 		public double[] panel	= new double[2];
 		public double[] screen	= new double[2];
+	}
+	public static class Plane
+	{
+		public Vector3D topPlane	 = new Vector3D( 0, 1, 1);
+		public Vector3D bottomPlane	 = new Vector3D( 0,-1, 1);
+		public Vector3D rightPlane	 = new Vector3D( 1, 0, 1);
+		public Vector3D leftPlane	 = new Vector3D(-1, 0, 1);
 	}
 	
 	public void startThread()
 	{
 		thr = new Thread(this);
 		thr.start();
+		
+		createBufferStrategy(2);
+		bs = this.getBufferStrategy();
 	}
 	
 	public 	int FPS 	 = 60;
@@ -41,11 +52,17 @@ public class Panel extends JPanel implements Runnable
 	private int WIDTH	 = 70;
 	private int HEIGHT	 = 46;
 	
-	public Dimension screen = Toolkit.getDefaultToolkit().getScreenSize();
+	private double	 dIntV	 = 1000000000/FPS;
+	private double 	 delta	 = 0;
+	private long	 last    = System.nanoTime();
+	private long	 timer   = 0;
 	
-	public Window	  root = new Window();
+	public static Dimension screen = Toolkit.getDefaultToolkit().getScreenSize();
+	public static Window root = new Window();
+	public static Plane plane = new Plane();
+	
 	public Thread	  thr;
-	public Graphics2D g2;
+	public BufferStrategy bs;
 	
 	public InputHandler		input	= new InputHandler();
 	
@@ -60,14 +77,13 @@ public class Panel extends JPanel implements Runnable
 		
 		this.setPreferredSize 		(new Dimension((int)root.panel[0], (int)root.panel[1]));
 		this.setBackground    		(Color.black);
-		this.setDoubleBuffered		(true);
 		this.addKeyListener   		(input);
 //		this.addMouseListener 		(mAction);
 //		this.addMouseMotionListener	(mMotion);
 //		this.addMouseWheelListener  (mWheel);
 		this.setFocusable    		(true);
 		
-//		plr.camera.p.y = -px*2 - 5;
+		plr.camera.p.y = -px*2 - 5;
 //		plr.camera.rotation.y = Math.toRadians(90);
 	}
 	
@@ -76,10 +92,11 @@ public class Panel extends JPanel implements Runnable
 		root.screen[0] = screen.getWidth ();
 		root.screen[1] = screen.getHeight();
 		
-		light.rX -= 0.1;
-		light.rY += 0.1/3;
+		light.rX -= 0.5*2/10;
+		light.rY -= 0.0625*2/10;
 		
 		light.update();
+		obj.updateAll();
 		plr.update();
 	}
 
@@ -87,11 +104,6 @@ public class Panel extends JPanel implements Runnable
 	public void run()
 	{
 		// panel loop
-		double	 dIntV	 = 1000000000/FPS;
-		double 	 delta	 = 0;
-		long	 last    = System.nanoTime();
-		long	 timer   = 0;
-		int		 dCount  = 0;
 		long	 curTime;
 		
 		while(thr != null) {
@@ -102,13 +114,25 @@ public class Panel extends JPanel implements Runnable
 			if(delta >= 1) {
 				this.update();
 				
-				repaint();
+				if(bs != null)
+				{
+					Graphics g = (Graphics) bs.getDrawGraphics();
+					
+					g.setColor(Color.BLACK);
+					g.fillRect(0, 0, (int)root.panel[0], (int)root.panel[1]);
+					
+					g.setColor(Color.WHITE);
+					
+					obj.generateAll(g);
+					
+					bs.show();
+					
+					g.dispose();
+				}
 				
 				delta  -- ;
-				dCount ++ ;
 			}
 			if(timer >= 1000000000) {
-				dCount = 0;
 				timer  = 0;
 			}
 			
@@ -116,14 +140,13 @@ public class Panel extends JPanel implements Runnable
 		}
 	}
 	
-	public void paintComponent(Graphics g)
-	{
-		super.paintComponent(g);
-		g2 = (Graphics2D) g;
-		g2.setColor(Color.WHITE);
-		
-		obj.generateAll(g2);
-		
-		g2.dispose();
-	}
+//	public void paintComponent(Graphics g)
+//	{
+//		super.paintComponent(g);
+//		g.setColor(Color.WHITE);
+//		
+//		obj.generateAll(g);
+//		
+//		g.dispose();
+//	}
 }
