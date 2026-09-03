@@ -36,8 +36,8 @@ public class LightEnvironment {
 	public LightEnvironment(Panel pn)
 	{
 		rotation  	  = new Theta	(0, 0, 0);
-		direction	  = new Vector3D(0, 0, -150);
-		anchoredPoint = new Vector3D(0, 0, -150);
+		direction	  = new Vector3D(0, 0, -500);
+		anchoredPoint = new Vector3D(0, 0, -500);
 		
 		rX = 0;
 		rY = 0;
@@ -47,22 +47,26 @@ public class LightEnvironment {
 		sun.LoadFromObjectFile("ball_lowQuality");
 		sun.offset = direction;
 		sun.clr = new Color(255, 255, 150);
-		sun.scale = 5;
+		sun.scale = 15;
 		sun.name = "Sun";
+		sun.collision = false;
+		sun.BRIGHT = true;
 		
 		moon = new MeshPart();
 		moon.LoadFromObjectFile("ball_lowQuality");
 		moon.offset = direction;
 		moon.clr = new Color(75, 75, 255);
-		moon.scale = 5;
+		moon.scale = 15;
 		moon.name = "Moon";
+		moon.collision = false;
+		moon.BRIGHT = true;
 		
 		sun.configuration = () -> {
 			sun.offset = direction;
 		};
 		
 		moon.configuration = () -> {
-			moon.offset = Vector3D.Mul(direction, -1);
+			moon.offset = direction.Mul(-1);
 		};
 		
 		Vector<MeshPart> m = new Vector<>();
@@ -87,10 +91,10 @@ public class LightEnvironment {
 		rotation.y = Math.toRadians(rY);
 		rotation.z = Math.toRadians(rZ);
 		
-		Theta.updateRotation(rotation);
+		rotation.updateRotation();
 		
-		Matrix4x4 matRotXYZ = Matrix4x4.Mul(Matrix4x4.Mul(rotation.matRotX, rotation.matRotY), rotation.matRotZ);
-		direction = Matrix4x4.MultiplyMatrixVector(matRotXYZ, anchoredPoint);
+		Matrix4x4 matRotXYZ = rotation.matRotX.Mul(rotation.matRotY.Mul(rotation.matRotZ));
+		direction = matRotXYZ.MultiplyMatrixVector(anchoredPoint);
 		
 		sun.offset = direction;
 	}

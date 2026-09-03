@@ -19,28 +19,28 @@ public class Theta
 		matRotZ = new Matrix4x4();
 	}
 
-	public static void updateRotation(Theta t)
+	public void updateRotation()
 	{
-		t.matRotZ.m[0][0] = Math.cos(t.z);
-		t.matRotZ.m[0][1] = Math.sin(t.z);
-		t.matRotZ.m[1][0] =-Math.sin(t.z);
-		t.matRotZ.m[1][1] = Math.cos(t.z);
-		t.matRotZ.m[2][2] = 1;
-		t.matRotZ.m[3][3] = 1;
+		this.matRotZ.m[0][0] = Math.cos(this.z);
+		this.matRotZ.m[0][1] = Math.sin(this.z);
+		this.matRotZ.m[1][0] =-Math.sin(this.z);
+		this.matRotZ.m[1][1] = Math.cos(this.z);
+		this.matRotZ.m[2][2] = 1;
+		this.matRotZ.m[3][3] = 1;
 		
-		t.matRotY.m[0][0] = Math.cos(t.y);
-		t.matRotY.m[0][2] =-Math.sin(t.y);
-		t.matRotY.m[1][1] = 1;
-		t.matRotY.m[2][0] = Math.sin(t.y);
-		t.matRotY.m[2][2] = Math.cos(t.y);
-		t.matRotY.m[3][3] = 1;
+		this.matRotY.m[0][0] = Math.cos(this.y);
+		this.matRotY.m[0][2] =-Math.sin(this.y);
+		this.matRotY.m[1][1] = 1;
+		this.matRotY.m[2][0] = Math.sin(this.y);
+		this.matRotY.m[2][2] = Math.cos(this.y);
+		this.matRotY.m[3][3] = 1;
 		
-		t.matRotX.m[0][0] = 1;
-		t.matRotX.m[1][1] = Math.cos(t.x);
-		t.matRotX.m[1][2] = Math.sin(t.x);
-		t.matRotX.m[2][1] =-Math.sin(t.x);
-		t.matRotX.m[2][2] = Math.cos(t.x);
-		t.matRotX.m[3][3] = 1;
+		this.matRotX.m[0][0] = 1;
+		this.matRotX.m[1][1] = Math.cos(this.x);
+		this.matRotX.m[1][2] = Math.sin(this.x);
+		this.matRotX.m[2][1] =-Math.sin(this.x);
+		this.matRotX.m[2][2] = Math.cos(this.x);
+		this.matRotX.m[3][3] = 1;
 	}
 
 	public static Matrix4x4 calculateMatrixRotationZ(double z) {

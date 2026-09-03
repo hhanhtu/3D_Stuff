@@ -19,6 +19,8 @@ public class MeshPart extends SuperObject
 	private Vector<Triangle2D> trs			 = new Vector<>();
 	private Vector<Triangle2D> triToRender	 = new Vector<>();
 	
+	private Vector3D size;
+	
 	private HashMap<String, Vector> c0 = new HashMap<>();
 	private HashMap<String, Vector> c1 = new HashMap<>();
 	private HashMap<String, Vector> c2 = new HashMap<>();
@@ -67,7 +69,7 @@ public class MeshPart extends SuperObject
 		tris.add(new Triangle2D(new Vector3D(1, 0, 1), new Vector3D(0, 0, 0), new Vector3D(1, 0, 0)));
 	 */
 	
-	public void generate(AssetManager obj)
+	public void generateTriangle2D(AssetManager obj)
 	{
 		update();
 		
@@ -77,7 +79,17 @@ public class MeshPart extends SuperObject
 		
 		int id = 0;
 		
-		Triangle2D.Transformed3Dto2D(tris, this, obj, triToRender);
+		SuperObject.Transformed3Dto2D(tris, this, obj, triToRender);
+		
+		triToRender.sort((Triangle2D t1, Triangle2D t2) -> {
+			double z1 = (t1.p[0].z + t1.p[1].z + t1.p[2].z) / 3;
+			double z2 = (t2.p[0].z + t2.p[1].z + t2.p[2].z) / 3;
+			
+			if(z1 > z2) return -1;
+			if(z1 < z2) return  1;
+			
+			return 0;
+		});
 		
 		for(Triangle2D tri: triToRender)
 		{
@@ -97,10 +109,10 @@ public class MeshPart extends SuperObject
 					trs.removeFirst();
 					nTris--;
 					
-					c0 = Vector3D.TriangleClippingInPlane(SuperObject.topPlane		, Panel.plane.topPlane		, t);
-					c1 = Vector3D.TriangleClippingInPlane(SuperObject.bottomPlane	, Panel.plane.bottomPlane	, t);
-					c2 = Vector3D.TriangleClippingInPlane(SuperObject.rightPlane	, Panel.plane.rightPlane	, t);
-					c3 = Vector3D.TriangleClippingInPlane(SuperObject.leftPlane		, Panel.plane.leftPlane		, t);
+					c0 = Vector3D.TriangleClippingInPlane(Panel.plane.topPlane.view		, Panel.plane.topPlane.unit		, t);
+					c1 = Vector3D.TriangleClippingInPlane(Panel.plane.bottomPlane.view	, Panel.plane.bottomPlane.unit	, t);
+					c2 = Vector3D.TriangleClippingInPlane(Panel.plane.rightPlane.view 	, Panel.plane.rightPlane.unit	, t);
+					c3 = Vector3D.TriangleClippingInPlane(Panel.plane.leftPlane.view 	, Panel.plane.leftPlane.unit 	, t);
 					
 					switch(p)
 					{

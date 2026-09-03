@@ -3,32 +3,51 @@ package objects;
 import java.awt.BasicStroke;
 import java.awt.Color;
 import java.awt.Graphics;
+import java.awt.Graphics2D;
 import java.awt.Polygon;
+import java.awt.TexturePaint;
+import java.awt.geom.Rectangle2D;
+import java.awt.image.BufferedImage;
 import java.util.HashMap;
 import java.util.Vector;
+
+import javax.imageio.ImageIO;
 
 import main.AssetManager;
 import main.Panel;
 import variables.Matrix4x4;
+import variables.Vector2D;
 import variables.Vector3D;
 
 @SuppressWarnings("rawtypes")
 public class Triangle2D
 {
 	public Vector3D[] p;
+	public Vector2D[] t;
+	
 	public Color	  clr;
 	public double	  LightLevel;
+	public boolean	  Shading;
 	public String 	  parent;
 	public int 		  id;
 	
 	private static Polygon pol = new Polygon();
 	
+	public Triangle2D(Vector3D p1, Vector3D p2, Vector3D p3, Vector2D t1, Vector2D t2, Vector2D t3)
+		{set(p1, p2, p3, t1, t2, t3);}
 	public Triangle2D(Vector3D p1, Vector3D p2, Vector3D p3)
+		{set(p1, p2, p3, null, null, null);}
+	public Triangle2D()
+		{set(null, null, null, null, null, null);}
+	
+	private void set(Vector3D p1, Vector3D p2, Vector3D p3, Vector2D t1, Vector2D t2, Vector2D t3)
 	{
 		p	 = new Vector3D[3];
-		p[0] = p1;
-		p[1] = p2;
-		p[2] = p3;
+		t	 = new Vector2D[3];
+		
+		p[0] = p1; t[0] = t1; if(t1 == null) t[0] = Vector2D.zero; if(p1 == null) p[0] = Vector3D.zero;
+		p[1] = p2; t[1] = t2; if(t2 == null) t[1] = Vector2D.zero; if(p2 == null) p[1] = Vector3D.zero;
+		p[2] = p3; t[2] = t3; if(t3 == null) t[2] = Vector2D.zero; if(p3 == null) p[2] = Vector3D.zero;
 		
 		parent = null;
 		id	   = -1;
@@ -44,112 +63,64 @@ public class Triangle2D
 		return tri;
 	}
 	
-	public static void SetColor(Triangle2D tri, Panel pn)
+	public void SetColor(Panel pn)
 	{
-		int r = tri.clr.getRed();
-		int g = tri.clr.getGreen();
-		int b = tri.clr.getBlue();
+		int r = this.clr.getRed();
+		int g = this.clr.getGreen();
+		int b = this.clr.getBlue();
 		
-		int nR = (int)(r/pn.light.DARKNESS		*tri.LightLevel);
-		int nG = (int)(g/pn.light.DARKNESS		*tri.LightLevel);
-		int nB = (int)(b/(pn.light.DARKNESS/2)	*tri.LightLevel);
+		int nR = (int)(r/pn.light.DARKNESS		*this.LightLevel);
+		int nG = (int)(g/pn.light.DARKNESS		*this.LightLevel);
+		int nB = (int)(b/(pn.light.DARKNESS/2)	*this.LightLevel);
 		
-		int dR = (int)(r*tri.LightLevel);
-		int dG = (int)(g*tri.LightLevel);
-		int dB = (int)(b*tri.LightLevel);
+		int dR = (int)(r*this.LightLevel);
+		int dG = (int)(g*this.LightLevel);
+		int dB = (int)(b*this.LightLevel);
 		
-		if(tri.parent != "Sun" && tri.parent != "Moon")
+		if(this.Shading)
 		{
 			// make a color library please :: check color in library --IFNOT-> create new color and store. next time check again then use the color in library
 			
 			try
 			{
-				tri.clr = new Color(dR, dG, dB);
+				this.clr = new Color(dR, dG, dB);
 				
 				if(pn.light.state == "night")
-					tri.clr = new Color(nR, nG, nB);
+					this.clr = new Color(nR, nG, nB);
 			} catch(Exception e)
 			{
-				tri.clr = new Color((int)(r/pn.light.DARKNESS*2		* Math.abs(tri.LightLevel)),
-									(int)(g/pn.light.DARKNESS*2		* Math.abs(tri.LightLevel)),
-									(int)(b/(pn.light.DARKNESS)		* Math.abs(tri.LightLevel)));
+//				tri.clr = Color.BLACK;
+				
+				this.clr = new Color((int)(r/pn.light.DARKNESS		* Math.abs(this.LightLevel)),
+									(int)(g/pn.light.DARKNESS		* Math.abs(this.LightLevel)),
+									(int)(b/(pn.light.DARKNESS)		* Math.abs(this.LightLevel)));
+				
+				if(pn.light.state == "night")
+					this.clr = Color.BLACK;
 			}
 		}
 	}
 	
-	public static void Transformed3Dto2D(Vector<Triangle2D> tris, MeshPart m, AssetManager obj, Vector<Triangle2D> out)
+	public void draw(Graphics g, Color clr)
 	{
-		Panel pn = obj.pn;
+		g.setColor(clr);
 		
-		for(Triangle2D tri:tris)
-		{
-			Triangle2D triProjected   = new Triangle2D(Vector3D.zero, Vector3D.zero, Vector3D.zero);
-			Triangle2D triTransformed = new Triangle2D(Vector3D.zero, Vector3D.zero, Vector3D.zero);
-			Triangle2D triView 	  	  = new Triangle2D(Vector3D.zero, Vector3D.zero, Vector3D.zero);
-			
-			triTransformed.p[0] = Matrix4x4.MultiplyMatrixVector(SuperObject.matWorld, Vector3D.Add(tri.p[0], Vector3D.Mul(m.anchoredPoint, m.scale)));
-			triTransformed.p[1] = Matrix4x4.MultiplyMatrixVector(SuperObject.matWorld, Vector3D.Add(tri.p[1], Vector3D.Mul(m.anchoredPoint, m.scale)));
-			triTransformed.p[2] = Matrix4x4.MultiplyMatrixVector(SuperObject.matWorld, Vector3D.Add(tri.p[2], Vector3D.Mul(m.anchoredPoint, m.scale)));
-			
-			triTransformed.p[0] = Vector3D.Add(Vector3D.Mul(triTransformed.p[0], m.scale), m.offset);
-			triTransformed.p[1] = Vector3D.Add(Vector3D.Mul(triTransformed.p[1], m.scale), m.offset);
-			triTransformed.p[2] = Vector3D.Add(Vector3D.Mul(triTransformed.p[2], m.scale), m.offset);
-			
-			Vector3D line1  = Vector3D.Line(triTransformed.p[1], triTransformed.p[0]);
-			Vector3D line2  = Vector3D.Line(triTransformed.p[2], triTransformed.p[0]);
-			Vector3D normal = Vector3D.Normalise(Vector3D.Cross(line1, line2));
-			
-			triView.p[0] = Matrix4x4.MultiplyMatrixVector(pn.plr.camera.vCam, triTransformed.p[0]);
-			triView.p[1] = Matrix4x4.MultiplyMatrixVector(pn.plr.camera.vCam, triTransformed.p[1]);
-			triView.p[2] = Matrix4x4.MultiplyMatrixVector(pn.plr.camera.vCam, triTransformed.p[2]);
-			
-			m.result =  Vector3D.TriangleClippingInPlane(new Vector3D(0, 0, .05), Vector3D.look, triView);
-			
-			for(int i = 0; i < (int)m.result.get("n_tris").get(0); i++)
-			{
-				Triangle2D rTri = (Triangle2D)m.result.get("Triangles").get(i);
-				
-				triProjected.p[0] = Matrix4x4.MultiplyMatrixVector(SuperObject.mat, rTri.p[0]);
-				triProjected.p[1] = Matrix4x4.MultiplyMatrixVector(SuperObject.mat, rTri.p[1]);
-				triProjected.p[2] = Matrix4x4.MultiplyMatrixVector(SuperObject.mat, rTri.p[2]);
-				
-				triProjected.p[0] = Vector3D.Div(triProjected.p[0], triProjected.p[0].w);
-				triProjected.p[1] = Vector3D.Div(triProjected.p[1], triProjected.p[1].w);
-				triProjected.p[2] = Vector3D.Div(triProjected.p[2], triProjected.p[2].w);
-				
-				triProjected.p[0] = Vector3D.Add(triProjected.p[0], pn.plr.camera.viewOffset);
-				triProjected.p[1] = Vector3D.Add(triProjected.p[1], pn.plr.camera.viewOffset);
-				triProjected.p[2] = Vector3D.Add(triProjected.p[2], pn.plr.camera.viewOffset);
-				
-				triProjected.p[0].x *= Panel.root.panel[0]/2;
-				triProjected.p[1].x *= Panel.root.panel[0]/2;
-				triProjected.p[2].x *= Panel.root.panel[0]/2;
-				
-				triProjected.p[0].y *= Panel.root.panel[1]/2;
-				triProjected.p[1].y *= Panel.root.panel[1]/2;
-				triProjected.p[2].y *= Panel.root.panel[1]/2;
-				
-				Vector3D camRay = Vector3D.Sub(triTransformed.p[0], pn.plr.camera.p);
-				
-				if(Vector3D.DotProduct(normal, camRay) < 0)		// < 0 : view outside surface		|| > 0 : view inside surface
-				{
-					Vector3D dL = Vector3D.Normalise(pn.light.direction);
-					
-					if(pn.light.state.equals("night"))
-						dL = Vector3D.Normalise(Vector3D.Mul(pn.light.direction, -1));
-					
-					double dp = Vector3D.DotProduct(normal, dL);
-					
-					triProjected.LightLevel = dp;
-					triProjected.parent = m.name;
-					triProjected.clr = m.clr;
-					
-					Triangle2D.SetColor(triProjected, pn);
-					
-					out.addLast(triProjected);
-				}
-			}
-		}
+		g.drawLine((int)this.p[0].x, (int)this.p[0].y, (int)this.p[1].x, (int)this.p[1].y);
+		g.drawLine((int)this.p[1].x, (int)this.p[1].y, (int)this.p[2].x, (int)this.p[2].y);
+		g.drawLine((int)this.p[2].x, (int)this.p[2].y, (int)this.p[0].x, (int)this.p[0].y);
+	}
+	
+	public void fill(Graphics g)
+	{
+		g.setColor(this.clr);
+		
+		pol.reset();
+		
+		pol.addPoint((int)this.p[0].x, (int)this.p[0].y);
+		pol.addPoint((int)this.p[1].x, (int)this.p[1].y);
+		pol.addPoint((int)this.p[2].x, (int)this.p[2].y);
+		
+		g.fillPolygon(pol);
 	}
 	
 	public static void draw(Graphics g, Triangle2D tri, Color clr)

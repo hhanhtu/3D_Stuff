@@ -4,7 +4,6 @@ import java.awt.Color;
 import java.awt.Graphics;
 import java.util.Comparator;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.Map;
 import java.util.Vector;
 
@@ -13,6 +12,7 @@ import objects.Presets;
 import objects.SuperObject;
 import objects.Triangle2D;
 import variables.Matrix4x4;
+import variables.Vector2D;
 import variables.Vector3D;
 
 @SuppressWarnings("rawtypes")
@@ -20,11 +20,11 @@ public class AssetManager
 {
 	public Panel pn;
 	
-	public HashMap<String, Vector> mesh = new HashMap<>();
-	public boolean				   WIREFRAME = false;
+	public HashMap<String, Vector>  mesh = new HashMap<>();
+	public boolean				    WIREFRAME = false;
 	
-	private Vector<MeshPart>		obj 					= new Vector<>();
-	public  Vector<Triangle2D>		GLOBALTRIANGLEFRAMES 	= new Vector<>();
+	public Vector<MeshPart>			obj 				= new Vector<>();
+	public Vector<Triangle2D>		GLOBALTRIANGLEFRAMES= new Vector<>();
 	
 	public AssetManager(Panel pn)
 	{
@@ -37,43 +37,34 @@ public class AssetManager
 	
 	public void loadAsset()
 	{
-//		Vector<MeshPart> m = new Vector<>();
-//		
-//		for(int k = -1; k <= 1; k++)
-//		{
-//			if(k != 0)
-//			{
-//				for(int v = -1; v <= 1; v++)
-//				{
-//					if(v != 0)
-//					{
-//						for(int j = 1; j < 10; j++)
-//						{
-//							for(int i = 1; i < 10; i++)
-//							{
-//								MeshPart c = new MeshPart(pn);
-//								c.LoadFromObjectFile("cube");
-//								c.scale = 3;
-//								c.offset = new Vector3D(i*k*c.size().x*2 + 5, j*v*c.size().y*2 + 5, 0);
-//								if(i%2 == 0)
-//									c.clr = Color.GRAY;
-//								
-//								m.add(c);
-//							}
-//						}
-//					}
-//				}
-//			}
-//		}
+		Vector<MeshPart> m = Presets.platform_FLAT(3);
 		
-		Vector<MeshPart> m = Presets.platform();
-
+		MeshPart plrDebug = new MeshPart();
+		plrDebug.LoadFromObjectFile("cube");
+		plrDebug.clr = Color.GREEN;
+		plrDebug.scale = pn.px/8;
+		plrDebug.name = "Debug";
+		plrDebug.offset = pn.plr.position;
+		plrDebug.collision = false;
+		plrDebug.BRIGHT = true;
+		
+		plrDebug.configuration = ()->{
+			plrDebug.offset = pn.plr.position.Add(new Vector3D(pn.plr.camera.face.look .x * pn.plr.speed, 0, pn.plr.camera.face.look .z * pn.plr.speed)).Sub(new Vector3D(0, pn.plr.height - plrDebug.size().y, 0));
+			plrDebug.rY = Math.toDegrees(pn.plr.rotation.y);
+		};
+		
+		m.add(plrDebug);
+		
 		MeshPart cube = new MeshPart();
 		cube.LoadFromObjectFile("cube");
 		cube.clr = Color.RED;
-		cube.scale = 2;
-		cube.offset = new Vector3D(0, -20, 0);
+		cube.scale = 10;
+		cube.name = "cube";
+		cube.offset = new Vector3D(0, cube.size().y, 50);
+		
 		m.add(cube);
+		
+		int pillarCount = 0;
 		
 		for(int k = -1; k <= 1; k++)
 		{
@@ -84,20 +75,20 @@ public class AssetManager
 					MeshPart pillar1 = new MeshPart();
 					pillar1.LoadFromObjectFile("pillar");
 					pillar1.clr = Color.GREEN;
-					pillar1.scale = 2;
-					pillar1.name = "Pillar";
-					pillar1.offset = new Vector3D(15 * k, 0, i * 15);
-					pillar1.rX = 180;
+					pillar1.scale = 4;
+					pillar1.name = "Pillar" + pillarCount;
+					pillar1.offset = new Vector3D(50 * k, 0, i * 60);
+					pillarCount++;
 					
 					if(i%2 == 0) pillar1.clr = Color.BLUE;
 					
 					MeshPart pillar2 = new MeshPart();
 					pillar2.LoadFromObjectFile("pillar");
 					pillar2.clr = Color.GREEN;
-					pillar2.scale = 2;
-					pillar2.name = "Pillar";
-					pillar2.offset = new Vector3D(15 * k, 0,-i * 15);
-					pillar2.rX = 180;
+					pillar2.scale = 4;
+					pillar2.name = "Pillar" + pillarCount;
+					pillar2.offset = new Vector3D(50 * k, 0,-i * 60);
+					pillarCount++;
 					
 					if(i%2 == 0) pillar2.clr = Color.BLUE;
 					
@@ -108,10 +99,6 @@ public class AssetManager
 		}
 		
 		mesh.put("Workspace", m);
-	}
-
-	public void updateAll()
-	{
 	}
 	
 	public void generateAll(Graphics g)
@@ -124,7 +111,7 @@ public class AssetManager
 			for(Object o: i.getValue())
 			{
 				MeshPart m = (MeshPart)o;
-				m.generate(this);
+				m.generateTriangle2D(this);
 				
 				obj.add(m);
 			}
@@ -142,21 +129,21 @@ public class AssetManager
 		
 		for(Triangle2D tri: GLOBALTRIANGLEFRAMES)
 		{
-			Triangle2D.fill(g, tri);
+			tri.fill(g);
 			if(WIREFRAME)
-				Triangle2D.draw(g, tri, Color.ORANGE);
+				tri.draw(g, Color.PINK);
 		}
 		
 		if(WIREFRAME)
 		{
 			for(MeshPart m: obj)
 			{
-				Vector3D pointTransformed = Matrix4x4.MultiplyMatrixVector(SuperObject.matWorld, m.offset);
-				Vector3D pointViewed	  = Matrix4x4.MultiplyMatrixVector(pn.plr.camera.vCam, pointTransformed);
-				Vector3D point 			  = Matrix4x4.MultiplyMatrixVector(SuperObject.mat, pointViewed);
+				Vector3D pointTransformed = SuperObject.matWorld.MultiplyMatrixVector(m.offset);
+				Vector3D pointViewed	  = pn.plr.camera.vCam.MultiplyMatrixVector(pointTransformed);
+				Vector3D point 			  = SuperObject.mat.MultiplyMatrixVector(pointViewed);
 				
-				point = Vector3D.Div(point, point.w);
-				point = Vector3D.Add(point, pn.plr.camera.viewOffset);
+				point.Div(point.w);
+				point.Add(pn.plr.camera.viewOffset);
 				
 				g.setColor(Color.RED);
 				g.fillOval((int)(point.x * Panel.root.panel[0]/2 - 4), (int)(point.y * Panel.root.panel[1]/2  - 4), 8, 8);

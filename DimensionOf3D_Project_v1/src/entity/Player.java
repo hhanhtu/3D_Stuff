@@ -1,7 +1,15 @@
 package entity;
 
+import java.awt.Color;
+import java.awt.Graphics;
+
 import main.Camera;
+import main.Collision;
 import main.Panel;
+import main.Physic;
+import objects.MeshPart;
+import objects.SuperObject;
+import variables.Matrix4x4;
 import variables.Vector3D;
 
 public class Player extends Entity
@@ -9,23 +17,33 @@ public class Player extends Entity
 	private boolean wireframe = false;
 	private int 	wft 	  = 0;
 	
+	private int 	isFCollision = 1;
+	private int 	isRCollision = 1;
+	private int 	isUCollision = 1;
+	
 	public Player(Panel pn)
 	{
 		this.pn		= pn;
 		this.camera = new Camera(pn);
+		this.phy 	= new Physic(this);
 		this.input	= pn.input;
 		
-		this.height = 2;
+		this.height = 1*pn.px;
 		this.speed  = 1;
 	}
 	
 	public void update()
 	{
-		speed = pn.FPS/14;
+		speed = pn.FPS/30;
+		
+		phy.velocity = new Vector3D(0, -3, 0);
+		
+		phy.linearVelocity();
+		Collision.checkEntityCollision(this, isFCollision, isRCollision, isUCollision);
 		
 		UpdateUserInput();
 		
-		camera.update();
+		camera.update(this);
 	}
 	
 	public void UpdateUserInput()
@@ -54,36 +72,44 @@ public class Player extends Entity
 			}
 		}
 		
-		Vector3D forward = new Vector3D(camera.face.get("look")	.x * speed, 0, camera.face.get("look") .z * speed);
-		Vector3D sideward= new Vector3D(camera.face.get("right").x * speed, 0, camera.face.get("right").z * speed);
-		Vector3D upward  = new Vector3D(0, camera.face.get("up").y * speed, 0);
+		Vector3D forward = new Vector3D(camera.face.look .x * speed, 0, camera.face.look .z * speed);
+		Vector3D sideward= new Vector3D(camera.face.right.x * speed, 0, camera.face.right.z * speed);
+//		Vector3D upward  = new Vector3D(0, camera.face.up.y * speed * isUCollision, 0);
 		
 		if(input.keyCode.indexOf("SPACE") != -1)
-			camera.p =  Vector3D.Sub(camera.p, upward);
+			position.y += speed;
 		if(input.keyCode.indexOf("Shift") != -1)
-			camera.p =  Vector3D.Add(camera.p, upward);;
+			position.y -= speed;
 		
 		if(input.keyCode.indexOf("A") != -1)
-			camera.p =  Vector3D.Sub(camera.p, sideward);
+			position =  Vector3D.Add(position, sideward.Mul(Collision.checkEntityCollision(this, 0, 1, 0)));
 		if(input.keyCode.indexOf("D") != -1)
-			camera.p =  Vector3D.Add(camera.p, sideward);
+			position =  Vector3D.Sub(position, sideward.Mul(Collision.checkEntityCollision(this, 0,-1, 0)));
 		
 		if(input.keyCode.indexOf("W") != -1)
-			camera.p =  Vector3D.Add(camera.p, forward);
+		{
+			position =  Vector3D.Add(position, forward.Mul(Collision.checkEntityCollision(this, 1, 0, 0)));
+		}
 		if(input.keyCode.indexOf("S") != -1)
-			camera.p =  Vector3D.Sub(camera.p, forward);
+		{
+			position =  Vector3D.Sub(position, forward.Mul(Collision.checkEntityCollision(this,-1, 0, 0)));
+		}
+		
+		camera.p = position;
 		
 		if(input.keyCode.indexOf("J") != -1)
-			camera.rotation.y -= Math.toRadians(speed);
+			rotation.y += Math.toRadians(speed);
 		if(input.keyCode.indexOf("L") != -1)
-			camera.rotation.y += Math.toRadians(speed);
+			rotation.y -= Math.toRadians(speed);
+		
+		camera.rotation = rotation;
 		
 		if(input.keyCode.indexOf("I") != -1)
-			if(camera.rotation.x + Math.toRadians(speed) <= Math.toRadians(90))
-					camera.rotation.x += Math.toRadians(speed);
-		if(input.keyCode.indexOf("K") != -1)
 			if(camera.rotation.x - Math.toRadians(speed) >= Math.toRadians(-90))
 				camera.rotation.x -= Math.toRadians(speed);
+		if(input.keyCode.indexOf("K") != -1)
+			if(camera.rotation.x + Math.toRadians(speed) <= Math.toRadians( 90))
+				camera.rotation.x += Math.toRadians(speed);
 	}
 	
 }

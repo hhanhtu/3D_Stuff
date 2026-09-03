@@ -7,11 +7,13 @@ import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.Toolkit;
 import java.awt.image.BufferStrategy;
+import java.awt.image.BufferedImage;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.HashMap;
 import java.util.Vector;
 
+import javax.imageio.ImageIO;
 import javax.swing.JPanel;
 
 import entity.Player;
@@ -32,10 +34,34 @@ public class Panel extends Canvas implements Runnable
 	}
 	public static class Plane
 	{
-		public Vector3D topPlane	 = new Vector3D( 0, 1, 1);
-		public Vector3D bottomPlane	 = new Vector3D( 0,-1, 1);
-		public Vector3D rightPlane	 = new Vector3D( 1, 0, 1);
-		public Vector3D leftPlane	 = new Vector3D(-1, 0, 1);
+		public static class topPlane
+		{
+			public Vector3D unit = new Vector3D( 0, 1, 1);
+			public Vector3D view = new Vector3D( 0, 0, 0);
+		}
+		
+		public static class bottomPlane
+		{
+			public Vector3D unit = new Vector3D( 0,-1, 1);
+			public Vector3D view = new Vector3D( 0, Panel.root.panel[1] - 1, 0);
+		}
+		
+		public static class rightPlane
+		{
+			public Vector3D unit = new Vector3D( 1, 0, 1);
+			public Vector3D view = new Vector3D( 0, 0, 0);
+		}
+		
+		public static class leftPlane
+		{
+			public Vector3D unit = new Vector3D(-1, 0, 1);
+			public Vector3D view = new Vector3D( Panel.root.panel[0] - 1, 0, 0);
+		}
+		
+		public topPlane		 topPlane	 = new topPlane();
+		public bottomPlane	 bottomPlane = new bottomPlane();
+		public rightPlane	 rightPlane	 = new rightPlane();
+		public leftPlane	 leftPlane	 = new leftPlane();
 	}
 	
 	public void startThread()
@@ -47,7 +73,7 @@ public class Panel extends Canvas implements Runnable
 		bs = this.getBufferStrategy();
 	}
 	
-	public 	int FPS 	 = 60;
+	public 	int FPS 	 = 120;
 	public	int px		 = 16;
 	private int WIDTH	 = 70;
 	private int HEIGHT	 = 46;
@@ -66,9 +92,11 @@ public class Panel extends Canvas implements Runnable
 	
 	public InputHandler		input	= new InputHandler();
 	
-	public AssetManager 	obj 	= new AssetManager(this);
 	public Player			plr		= new Player(this);
+	public AssetManager 	obj 	= new AssetManager(this);
 	public LightEnvironment light 	= new LightEnvironment(this);
+	
+	public static BufferedImage img;
 	
 	public Panel()
 	{
@@ -83,8 +111,15 @@ public class Panel extends Canvas implements Runnable
 //		this.addMouseWheelListener  (mWheel);
 		this.setFocusable    		(true);
 		
-		plr.camera.p.y = -px*2 - 5;
-//		plr.camera.rotation.y = Math.toRadians(90);
+		try
+		{
+			img = ImageIO.read(getClass().getResourceAsStream("/texture/grass.png"));
+		} catch(Exception e)
+		{
+			e.printStackTrace();
+		}
+		
+		plr.position.y = px*10;
 	}
 	
 	public void update()
@@ -92,11 +127,10 @@ public class Panel extends Canvas implements Runnable
 		root.screen[0] = screen.getWidth ();
 		root.screen[1] = screen.getHeight();
 		
-		light.rX -= 0.5*2/10;
-		light.rY -= 0.0625*2/10;
+		light.rX += 0.5*2/10;
+		light.rY += 0.0625*2/10;
 		
 		light.update();
-		obj.updateAll();
 		plr.update();
 	}
 
@@ -117,7 +151,6 @@ public class Panel extends Canvas implements Runnable
 				if(bs != null)
 				{
 					Graphics g = (Graphics) bs.getDrawGraphics();
-					
 					g.setColor(Color.BLACK);
 					g.fillRect(0, 0, (int)root.panel[0], (int)root.panel[1]);
 					
@@ -126,7 +159,6 @@ public class Panel extends Canvas implements Runnable
 					obj.generateAll(g);
 					
 					bs.show();
-					
 					g.dispose();
 				}
 				

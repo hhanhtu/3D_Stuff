@@ -8,13 +8,13 @@ public class Matrix4x4 {
 		m = new double[4][4];
 	}
 	
-	public static Vector3D MultiplyMatrixVector(Matrix4x4 m, Vector3D i)
+	public Vector3D MultiplyMatrixVector(Vector3D i)
 	{
 		Vector3D v = new Vector3D(0, 0, 0);
-		v.x = i.x * m.m[0][0] + i.y * m.m[1][0] + i.z * m.m[2][0] + m.m[3][0];
-		v.y = i.x * m.m[0][1] + i.y * m.m[1][1] + i.z * m.m[2][1] + m.m[3][1];
-		v.z = i.x * m.m[0][2] + i.y * m.m[1][2] + i.z * m.m[2][2] + m.m[3][2];
-		v.w = i.x * m.m[0][3] + i.y * m.m[1][3] + i.z * m.m[2][3] + m.m[3][3];
+		v.x = i.x * this.m[0][0] + i.y * this.m[1][0] + i.z * this.m[2][0] + this.m[3][0];
+		v.y = i.x * this.m[0][1] + i.y * this.m[1][1] + i.z * this.m[2][1] + this.m[3][1];
+		v.z = i.x * this.m[0][2] + i.y * this.m[1][2] + i.z * this.m[2][2] + this.m[3][2];
+		v.w = i.x * this.m[0][3] + i.y * this.m[1][3] + i.z * this.m[2][3] + this.m[3][3];
 		
 		return v;
 	}
@@ -44,11 +44,11 @@ public class Matrix4x4 {
 	
 	public static Matrix4x4 PointAt(Vector3D p, Vector3D t, Vector3D u)
 	{
-		Vector3D nf = Vector3D.Sub(t, p);
-		nf = Vector3D.Normalise(nf);
+		Vector3D nf = t.Sub(p);
+		nf.Normalise();
 		
-		Vector3D a  = Vector3D.Mul(nf, Vector3D.DotProduct(u, nf));
-		Vector3D nu = Vector3D.Normalise(Vector3D.Sub(u, a));
+		Vector3D a  = nf.Mul(Vector3D.DotProduct(u, nf));
+		Vector3D nu = u.Sub(a).Normalise();
 		
 		Vector3D nr = Vector3D.Cross(nu, nf);
 		
@@ -62,17 +62,30 @@ public class Matrix4x4 {
 		return m;
 	}
 	
-	public static Matrix4x4 quickInvert(Matrix4x4 t)
+	public Matrix4x4 quickInvert()
 	{
 		Matrix4x4 m = new Matrix4x4();
-		m.m[0][0] =  t.m[0][0];	 m.m[0][1] = t.m[1][0];  m.m[0][2] = t.m[2][0];
-		m.m[1][0] =  t.m[0][1];	 m.m[1][1] = t.m[1][1];  m.m[1][2] = t.m[2][1];
-		m.m[2][0] =  t.m[0][2];	 m.m[2][1] = t.m[1][2];	 m.m[2][2] = t.m[2][2];
+		m.m[0][0] =  this.m[0][0];	 m.m[0][1] = this.m[1][0];  m.m[0][2] = this.m[2][0];
+		m.m[1][0] =  this.m[0][1];	 m.m[1][1] = this.m[1][1];  m.m[1][2] = this.m[2][1];
+		m.m[2][0] =  this.m[0][2];	 m.m[2][1] = this.m[1][2];	m.m[2][2] = this.m[2][2];
 		
-		m.m[3][0] =-(t.m[3][0] * m.m[0][0] + t.m[3][1] * m.m[1][0] + t.m[3][2] * m.m[2][0]);
-		m.m[3][1] =-(t.m[3][0] * m.m[0][1] + t.m[3][1] * m.m[1][1] + t.m[3][2] * m.m[2][1]);
-		m.m[3][2] =-(t.m[3][0] * m.m[0][2] + t.m[3][1] * m.m[1][2] + t.m[3][2] * m.m[2][2]);
+		m.m[3][0] =-(this.m[3][0] * m.m[0][0] + this.m[3][1] * m.m[1][0] + this.m[3][2] * m.m[2][0]);
+		m.m[3][1] =-(this.m[3][0] * m.m[0][1] + this.m[3][1] * m.m[1][1] + this.m[3][2] * m.m[2][1]);
+		m.m[3][2] =-(this.m[3][0] * m.m[0][2] + this.m[3][1] * m.m[1][2] + this.m[3][2] * m.m[2][2]);
 		m.m[3][3] = 1;
+		
+		return m;
+	}
+	
+	public Matrix4x4 Mul(Matrix4x4 m2)
+	{
+		Matrix4x4 m = new Matrix4x4();
+		
+		for(int i = 0; i < 4; i++) {
+			for(int j = 0; j < 4; j++) {
+				m.m[i][j] = this.m[i][0] * m2.m[0][j] + this.m[i][1] * m2.m[1][j] + this.m[i][2] * m2.m[2][j] + this.m[i][3] * m2.m[3][j];
+			}
+		}
 		
 		return m;
 	}
@@ -88,15 +101,5 @@ public class Matrix4x4 {
 		}
 		
 		return m;
-	}
-	
-	public static void updateMat(Matrix4x4 mat, double AR, double FOV, double F, double N)
-	{
-		mat.m[0][0] = AR * FOV;
-		mat.m[1][1] = FOV;
-		mat.m[2][2] = F / (F - N);
-		mat.m[3][2] = (-F * N) / (F - N);
-		mat.m[2][3] = 1;
-		mat.m[3][3] = 0;
 	}
 }
