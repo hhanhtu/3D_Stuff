@@ -16,15 +16,10 @@ import variables.Vector3D;
 public class MeshPart extends SuperObject
 {
 	public HashMap<String, Vector> result = new HashMap<>();
-	private Vector<Triangle2D> trs			 = new Vector<>();
+	
 	private Vector<Triangle2D> triToRender	 = new Vector<>();
 	
 	private Vector3D size;
-	
-	private HashMap<String, Vector> c0 = new HashMap<>();
-	private HashMap<String, Vector> c1 = new HashMap<>();
-	private HashMap<String, Vector> c2 = new HashMap<>();
-	private HashMap<String, Vector> c3 = new HashMap<>();
 	
 	private Vector<Double> coordinatesX = new Vector<>();
 	private Vector<Double> coordinatesY = new Vector<>();
@@ -33,7 +28,7 @@ public class MeshPart extends SuperObject
 	public MeshPart()
 	{
 		tris = new Vector<>();
-		
+
 		offset			= new Vector3D(0, 0, 0);
 		anchoredPoint	= new Vector3D(0, 0, 0);
 		
@@ -46,6 +41,7 @@ public class MeshPart extends SuperObject
 		rY = 0;
 		rZ = 0;
 	}
+	
 	/*
 									SQUARE BY HAND
 		Vector<Triangle2D> tris = new Vector<>();
@@ -71,82 +67,90 @@ public class MeshPart extends SuperObject
 	
 	public void generateTriangle2D(AssetManager obj)
 	{
+		Panel pn = obj.pn;
+		
 		update();
 		
 		result.clear();
 		triToRender.clear();
-		c0.clear(); c1.clear(); c2.clear(); c3.clear();
 		
-		int id = 0;
-		
-		SuperObject.Transformed3Dto2D(tris, this, obj, triToRender);
-		
-		triToRender.sort((Triangle2D t1, Triangle2D t2) -> {
-			double z1 = (t1.p[0].z + t1.p[1].z + t1.p[2].z) / 3;
-			double z2 = (t2.p[0].z + t2.p[1].z + t2.p[2].z) / 3;
-			
-			if(z1 > z2) return -1;
-			if(z1 < z2) return  1;
-			
-			return 0;
-		});
-		
-		for(Triangle2D tri: triToRender)
+		for(Triangle2D tri:tris)
 		{
-			tri.id = id;
+			tri.clearProjected();
 			
-			trs.clear();
-			int nTrsAdd = 0;
+			tri.triTransformed.p[0] = matWorld.MultiplyMatrixVector(tri.p[0].Add(anchoredPoint.Mul(scale)));
+			tri.triTransformed.p[1] = matWorld.MultiplyMatrixVector(tri.p[1].Add(anchoredPoint.Mul(scale)));
+			tri.triTransformed.p[2] = matWorld.MultiplyMatrixVector(tri.p[2].Add(anchoredPoint.Mul(scale)));
 			
-			trs.addLast(tri);
-			int nTris = 1;
+			tri.triTransformed.p[0] = tri.triTransformed.p[0].Mul(scale).Add(offset);
+			tri.triTransformed.p[1] = tri.triTransformed.p[1].Mul(scale).Add(offset);
+			tri.triTransformed.p[2] = tri.triTransformed.p[2].Mul(scale).Add(offset);
 			
-			for(int p = 0; p < 4; p++)
+			tri.triTransformed.t[0] = tri.t[0];
+			tri.triTransformed.t[1] = tri.t[1];
+			tri.triTransformed.t[2] = tri.t[2];
+			
+			Vector3D line1  = Vector3D.Line(tri.triTransformed.p[1], tri.triTransformed.p[0]);
+			Vector3D line2  = Vector3D.Line(tri.triTransformed.p[2], tri.triTransformed.p[0]);
+			tri.triTransformed.normal = Vector3D.Cross(line1, line2).Normalise();
+			
+			tri.triView.p[0] = pn.plr.camera.vCam.MultiplyMatrixVector(tri.triTransformed.p[0]);
+			tri.triView.p[1] = pn.plr.camera.vCam.MultiplyMatrixVector(tri.triTransformed.p[1]);
+			tri.triView.p[2] = pn.plr.camera.vCam.MultiplyMatrixVector(tri.triTransformed.p[2]);
+			
+			tri.triView.t[0] = tri.triTransformed.t[0];
+			tri.triView.t[1] = tri.triTransformed.t[1];
+			tri.triView.t[2] = tri.triTransformed.t[2];
+			
+			result =  Vector3D.TriangleClippingInPlane(Vector3D.look.Mul(0.5), Vector3D.look, tri.triView);
+			
+			for(int i = 0; i < (int)result.get("n_tris").get(0); i++)
 			{
-				while(nTris > 0)
-				{
-					Triangle2D t = trs.getFirst();
-					trs.removeFirst();
-					nTris--;
-					
-					c0 = Vector3D.TriangleClippingInPlane(Panel.plane.topPlane.view		, Panel.plane.topPlane.unit		, t);
-					c1 = Vector3D.TriangleClippingInPlane(Panel.plane.bottomPlane.view	, Panel.plane.bottomPlane.unit	, t);
-					c2 = Vector3D.TriangleClippingInPlane(Panel.plane.rightPlane.view 	, Panel.plane.rightPlane.unit	, t);
-					c3 = Vector3D.TriangleClippingInPlane(Panel.plane.leftPlane.view 	, Panel.plane.leftPlane.unit 	, t);
-					
-					switch(p)
-					{
-					case 0: nTrsAdd = (int)c0.get("n_tris").get(0);
-						for(int j = 0; j < nTrsAdd; j++) {
-							trs.addLast(Triangle2D.getTrianglesFromClipResult(c0, j));
-							obj.GLOBALTRIANGLEFRAMES.add(trs.getLast());
-							}
-					break;
-					case 1: nTrsAdd = (int)c1.get("n_tris").get(0);
-						for(int j = 0; j < nTrsAdd; j++) {
-							trs.addLast(Triangle2D.getTrianglesFromClipResult(c1, j));
-							obj.GLOBALTRIANGLEFRAMES.add(trs.getLast());
-							}
-					break;
-					case 2: nTrsAdd = (int)c2.get("n_tris").get(0);
-						for(int j = 0; j < nTrsAdd; j++) {
-							trs.addLast(Triangle2D.getTrianglesFromClipResult(c2, j));
-							obj.GLOBALTRIANGLEFRAMES.add(trs.getLast());
-							}
-					break;
-					case 3: nTrsAdd = (int)c3.get("n_tris").get(0);
-						for(int j = 0; j < nTrsAdd; j++) {
-							trs.addLast(Triangle2D.getTrianglesFromClipResult(c3, j));
-							obj.GLOBALTRIANGLEFRAMES.add(trs.getLast());
-							}
-					break;
-					}
-				}
+				Triangle2D rTri = (Triangle2D)result.get("Triangles").get(i);
 				
-				nTris = trs.size();
+				tri.triProjected.p[0] = SuperObject.mat.MultiplyMatrixVector(rTri.p[0]);
+				tri.triProjected.p[1] = SuperObject.mat.MultiplyMatrixVector(rTri.p[1]);
+				tri.triProjected.p[2] = SuperObject.mat.MultiplyMatrixVector(rTri.p[2]);
+				    
+				tri.triProjected.t[0] = rTri.t[0];
+				tri.triProjected.t[1] = rTri.t[1];
+				tri.triProjected.t[2] = rTri.t[2];
+				
+				tri.triProjected.p[0] = tri.triProjected.p[0].Div(tri.triProjected.p[0].w);
+				tri.triProjected.p[1] = tri.triProjected.p[1].Div(tri.triProjected.p[1].w);
+				tri.triProjected.p[2] = tri.triProjected.p[2].Div(tri.triProjected.p[2].w);
+				                                             
+				tri.triProjected.p[0] = tri.triProjected.p[0].Add(pn.plr.camera.viewOffset);
+				tri.triProjected.p[1] = tri.triProjected.p[1].Add(pn.plr.camera.viewOffset);
+				tri.triProjected.p[2] = tri.triProjected.p[2].Add(pn.plr.camera.viewOffset);
+				
+				tri.triProjected.p[0].x *= Panel.root.panel[0]/2;
+				tri.triProjected.p[1].x *= Panel.root.panel[0]/2;
+				tri.triProjected.p[2].x *= Panel.root.panel[0]/2;
+				    
+				tri.triProjected.p[0].y *= Panel.root.panel[1]/2;
+				tri.triProjected.p[1].y *= Panel.root.panel[1]/2;
+				tri.triProjected.p[2].y *= Panel.root.panel[1]/2;
+				
+				Vector3D camRay = tri.triTransformed.p[0].Sub(pn.plr.camera.p);
+				
+				if(Vector3D.DotProduct(tri.triTransformed.normal, camRay) < 0)		// < 0 : view outside surface		|| > 0 : view inside surface
+				{
+					Vector3D dL = pn.light.direction.Normalise();
+					
+					if(pn.light.state.equals("night"))
+						dL = pn.light.direction.Mul(-1).Normalise();
+					
+					tri.triProjected.LightLevel = Vector3D.DotProduct(tri.triTransformed.normal, dL);
+					tri.triProjected.parent = this;
+					tri.triProjected.clr = clr;
+					tri.triProjected.Shading = !BRIGHT;
+					
+					tri.triProjected.SetColor(pn);
+					
+					obj.GLOBALTRIANGLEFRAMES.add(tri.triProjected);
+				}
 			}
-			
-			id++;
 		}
 	}
 	
@@ -218,7 +222,12 @@ public class MeshPart extends SuperObject
 						f[1] = Integer.parseInt(var[2]);
 						f[2] = Integer.parseInt(var[3]);
 						
-						tris.add(new Triangle2D(verts.get(f[0] - 1), verts.get(f[1] - 1), verts.get(f[2] - 1)));
+						Triangle2D tri = new Triangle2D(verts.get(f[0] - 1),
+														verts.get(f[1] - 1),
+														verts.get(f[2] - 1));
+						tri.createProjected();
+						
+						tris.add(tri);
 					}
 				}
 				

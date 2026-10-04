@@ -12,7 +12,7 @@ import variables.Theta;
 public class LightEnvironment {
 	public class Clock
 	{
-		public double h, m, s;
+		public int h, m, s;
 		public Clock(int h, int m, int s)
 		{
 			this.h = h;
@@ -26,7 +26,9 @@ public class LightEnvironment {
 	private Theta	 rotation ;
 	
 	public double rX, rY, rZ;
+	public Clock time;
 	
+	public String transition = "sun rise";
 	public String state = "day";
 	public double DARKNESS = 5;
 	
@@ -43,11 +45,13 @@ public class LightEnvironment {
 		rY = 0;
 		rZ = 0;
 		
+		time = new Clock(6, 0, 0);
+		
 		sun = new MeshPart();
 		sun.LoadFromObjectFile("ball_lowQuality");
 		sun.offset = direction;
 		sun.clr = new Color(255, 255, 150);
-		sun.scale = 15;
+		sun.scale = 30;
 		sun.name = "Sun";
 		sun.collision = false;
 		sun.BRIGHT = true;
@@ -55,8 +59,8 @@ public class LightEnvironment {
 		moon = new MeshPart();
 		moon.LoadFromObjectFile("ball_lowQuality");
 		moon.offset = direction;
-		moon.clr = new Color(75, 75, 255);
-		moon.scale = 15;
+		moon.clr = new Color(200, 200, 255);
+		moon.scale = 30;
 		moon.name = "Moon";
 		moon.collision = false;
 		moon.BRIGHT = true;
@@ -64,7 +68,6 @@ public class LightEnvironment {
 		sun.configuration = () -> {
 			sun.offset = direction;
 		};
-		
 		moon.configuration = () -> {
 			moon.offset = direction.Mul(-1);
 		};
@@ -77,15 +80,30 @@ public class LightEnvironment {
 	
 	public void update()
 	{
-		state = "day";
-		
-		if(Math.abs(rX) >= 180)
-			state = "night";
-		if(Math.abs(rX) >= 360)
+		if(time.s >= 60)
 		{
-			state = "day";
-			rX = 0;
+			time.s = 0;
+			time.m++;
 		}
+		if(time.m >= 60)
+		{
+			time.m = 0;
+			time.h++;
+		}
+		if(time.h > 24)
+			time.h = 1;
+		
+		rX = (time.h * 3600.0 + time.m * 60.0 + time.s)*360.0/(24.0*60.0*60.0) - 90;
+		
+		if(time.h <= 5 || time.h >= 17)
+			transition = "sun set";
+		else
+			transition = "sun rise";
+		
+		if(time.h <= 5 || time.h >= 18)
+			state = "night";
+		else
+			state = "day";
 		
 		rotation.x = Math.toRadians(rX);
 		rotation.y = Math.toRadians(rY);

@@ -1,8 +1,12 @@
 package variables;
 
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Vector;
 
+import entity.Player;
+import main.Panel;
+import objects.SuperObject;
 import objects.Triangle2D;
 
 public class Vector3D
@@ -12,17 +16,37 @@ public class Vector3D
 	public static Vector3D zero = new Vector3D(0, 0, 0);
 	public static Vector3D one  = new Vector3D(1, 1, 1);
 	
-	public static Vector3D look	 = new Vector3D(0, 0, 1);
-	public static Vector3D right = new Vector3D(1, 0, 0);
-	public static Vector3D up	 = new Vector3D(0,-1, 0);
+	public static Vector3D look	 = new Vector3D( 0, 0, 1);
+	public static Vector3D back	 = new Vector3D( 0, 0,-1);
+	public static Vector3D right = new Vector3D( 1, 0, 0);
+	public static Vector3D left	 = new Vector3D(-1, 0, 0);
+	public static Vector3D up	 = new Vector3D( 0,-1, 0);
+	public static Vector3D down  = new Vector3D( 0, 1, 0);
 	
+	public static Vector3D FL 	 = Vector3D.look.Add(Vector3D.left	); public static Vector3D BL 	 = Vector3D.back.Add(Vector3D.left	);
+	public static Vector3D FR 	 = Vector3D.look.Add(Vector3D.right	); public static Vector3D BR 	 = Vector3D.back.Add(Vector3D.right	);
+	
+	public static Vector3D UL 	 = Vector3D.up	.Add(Vector3D.left	); public static Vector3D DL 	 = Vector3D.down.Add(Vector3D.left	);
+	public static Vector3D UR 	 = Vector3D.up	.Add(Vector3D.right	); public static Vector3D DR 	 = Vector3D.down.Add(Vector3D.right	);
+	
+	public static Vector3D FU 	 = Vector3D.look.Add(Vector3D.up	); public static Vector3D BU 	 = Vector3D.back.Add(Vector3D.up	);
+	public static Vector3D FD 	 = Vector3D.look.Add(Vector3D.down	); public static Vector3D BD 	 = Vector3D.back.Add(Vector3D.down	);
+	
+	public static Vector3D FLU 	 = Vector3D.FL.Add(Vector3D.up		); public static Vector3D BLU 	 = Vector3D.BL.Add(Vector3D.up		);
+	public static Vector3D FRU 	 = Vector3D.FR.Add(Vector3D.down	); public static Vector3D BRU 	 = Vector3D.BR.Add(Vector3D.down	);
+	
+	private static Vector3D[] inPoint  = new Vector3D[3]; 	
+	private static Vector3D[] outPoint = new Vector3D[3];	
+	                                        
+	private static Vector2D[] inText  = new Vector2D[3]; 	
+	private static Vector2D[] outText = new Vector2D[3];	
+	
+	public Vector3D(double x, double y, double z, double w)
+	{this.x = x; this.y = y; this.z = z; this.w = w; }
 	public Vector3D(double x, double y, double z)
-	{
-		this.x = x;
-		this.y = y;
-		this.z = z;
-		this.w = 1;
-	}
+	{this.x = x; this.y = y; this.z = z; this.w = 1; }
+	public Vector3D()
+	{this.x = 0; this.y = 0; this.z = 0; this.w = 1; }
 	
 	public static Vector3D IntersectPlane(Vector3D planeP, Vector3D planeN, Vector3D start, Vector3D end, double t)
 	{
@@ -44,15 +68,18 @@ public class Vector3D
 	@SuppressWarnings("rawtypes")
 	public static HashMap<String, Vector> TriangleClippingInPlane(Vector3D planeP, Vector3D planeN, Triangle2D in)
 	{
+		Arrays.fill(inPoint, null); Arrays.fill(outPoint, null);
+		Arrays.fill(inText, null); Arrays.fill(outText, null);
+		
 		HashMap<String, Vector> result = new HashMap<>();
 		
 		planeN.Normalise();
 		
-		Vector3D[] inPoint  = new Vector3D[3]; 	int nInPointCount  = 0; inPoint [0] = Vector3D.zero; inPoint [1] = Vector3D.zero; inPoint [2] = Vector3D.zero;
-		Vector3D[] outPoint = new Vector3D[3];	int nOutPointCount = 0; outPoint[0] = Vector3D.zero; outPoint[1] = Vector3D.zero; outPoint[2] = Vector3D.zero;
+		int nInPointCount  = 0; inPoint [0] = Vector3D.zero; inPoint [1] = Vector3D.zero; inPoint [2] = Vector3D.zero;
+		int nOutPointCount = 0; outPoint[0] = Vector3D.zero; outPoint[1] = Vector3D.zero; outPoint[2] = Vector3D.zero;
 		
-		Vector2D[] inText  = new Vector2D[3]; 	int nInTextCount  = 0; inText [0]	 = Vector2D.zero; inText [1] = Vector2D.zero; inText [2] = Vector2D.zero;
-		Vector2D[] outText = new Vector2D[3];	int nOutTextCount = 0; outText[0]	 = Vector2D.zero; outText[1] = Vector2D.zero; outText[2] = Vector2D.zero;
+		int nInTextCount  = 0; inText [0]	 = Vector2D.zero; inText [1] = Vector2D.zero; inText [2] = Vector2D.zero;
+		int nOutTextCount = 0; outText[0]	 = Vector2D.zero; outText[1] = Vector2D.zero; outText[2] = Vector2D.zero;
 		
 		double d0 = Vector3D.DotProduct(planeN, in.p[0]) - Vector3D.DotProduct(planeN, planeP);
 		double d1 = Vector3D.DotProduct(planeN, in.p[1]) - Vector3D.DotProduct(planeN, planeP);
@@ -68,15 +95,7 @@ public class Vector3D
 		} else		{outPoint[nOutPointCount++]	 = in.p[2]; outText[nOutTextCount++] = in.t[2];
 		}
 		
-		Vector<Integer> niop = new Vector<>(); Vector<Double> d012 = new Vector<>(); Vector<Triangle2D> tris = new Vector<>(); Vector<Integer> ntri = new Vector<>();
-		
-		niop.add(nInPointCount);
-		niop.add(nOutPointCount);
-		
-		d012.add(d0); d012.add(d1); d012.add(d2);
-		
-		result.put("NumbersOfPoint" , niop);
-		result.put("Distance"		, d012);
+		Vector<Triangle2D> tris = new Vector<>(); Vector<Integer> ntri = new Vector<>();
 		
 		if(nInPointCount == 0)
 		{
@@ -158,6 +177,29 @@ public class Vector3D
 		return result;
 	}
 	
+	public Vector2D intoVector2D(Player plr)
+	{
+		Vector3D pVview = plr.camera.vCam.MultiplyMatrixVector(this);
+		Vector3D pVp = SuperObject.mat.MultiplyMatrixVector(pVview);
+		pVp = pVp.Div(pVp.w);
+		pVp = pVp.Add(plr.camera.viewOffset);
+		
+		pVp = pVp.Mul(Vector3D.right.Mul(Panel.root.panel[0]/2).Add(Vector3D.down.Mul(Panel.root.panel[1]/2)));
+		
+		return new Vector2D(pVp.x, pVp.y);
+	}
+	public Vector2D intoVector2D(Player plr, Vector3D v)
+	{
+		Vector3D pVview = plr.camera.vCam.MultiplyMatrixVector(this.Add(v));
+		Vector3D pVp = SuperObject.mat.MultiplyMatrixVector(pVview);
+		pVp = pVp.Div(pVp.w);
+		pVp = pVp.Add(plr.camera.viewOffset);
+		
+		pVp = pVp.Mul(Vector3D.right.Mul(Panel.root.panel[0]/2).Add(Vector3D.down.Mul(Panel.root.panel[1]/2)));
+		
+		return new Vector2D(pVp.x, pVp.y);
+	}
+	
 	public static double D(Vector3D p)
 	{
 		return Math.sqrt(p.x*p.x + p.y*p.y + p.z*p.z);
@@ -217,6 +259,15 @@ public class Vector3D
 		L.z = p1.z - p2.z;
 		
 		return L;
+	}
+	
+	public static double DistanceOf(Vector3D v1, Vector3D v2)
+	{
+		return Vector3D.D(new Vector3D(
+				v2.x/v2.w - v1.x/v1.w,
+				v2.y/v2.w - v1.y/v1.w,
+				v2.z/v2.w - v1.z/v1.w
+				));
 	}
 	
 	public Vector3D Add(Vector3D v2)

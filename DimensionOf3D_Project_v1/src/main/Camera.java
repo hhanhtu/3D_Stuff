@@ -68,10 +68,6 @@ public class Camera
 		
 		Matrix4x4 matRotXYZ = rotation.matRotX.Mul(rotation.matRotY.Mul(rotation.matRotZ));
 		
-//		face.put("look"	, matRotXYZ.MultiplyMatrixVector(Vector3D.look	));
-//		face.put("up"	, matRotXYZ.MultiplyMatrixVector(Vector3D.up	));
-//		face.put("right", matRotXYZ.MultiplyMatrixVector(Vector3D.right	));
-		
 		face.look 	= matRotXYZ.MultiplyMatrixVector(Vector3D.look	);
 		face.up 	= matRotXYZ.MultiplyMatrixVector(Vector3D.up	);
 		face.right	= matRotXYZ.MultiplyMatrixVector(Vector3D.right	);

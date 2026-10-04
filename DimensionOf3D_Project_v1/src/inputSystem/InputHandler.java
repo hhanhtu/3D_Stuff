@@ -9,6 +9,7 @@ import java.util.Vector;
 public class InputHandler extends InputCodeReader implements KeyListener
 {
 	public Vector<String> keyCode = new Vector<>();
+	public Vector<String> rkCode  = new Vector<>();
 	
 	@Override
 	public void keyTyped(KeyEvent e)
@@ -33,15 +34,17 @@ public class InputHandler extends InputCodeReader implements KeyListener
 		for(String k:keyCode)
 		{
 			if(k != null)
-			{
 				if(!k.equals(readKey(e.getKeyCode())))
-				{
 					kC_Clone.add(k);
-				}
-			}
 		}
 		
 		keyCode = kC_Clone;
+		
+		if(!rkCode.contains(readKey(e.getKeyCode())))
+			rkCode.add(readKey(e.getKeyCode()));
 	}
 
+	public void clearReleasedKey() {
+		rkCode.clear();
+	}
 }

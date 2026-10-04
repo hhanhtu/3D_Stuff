@@ -32,6 +32,9 @@ public class InputCodeReader
 		keyWords[KeyEvent.VK_E] 		= "E";
 		keyWords[KeyEvent.VK_Z] 		= "Z";
 		keyWords[KeyEvent.VK_C] 		= "C";
+		keyWords[KeyEvent.VK_B] 		= "B";
+		keyWords[KeyEvent.VK_T] 		= "T";
+		keyWords[KeyEvent.VK_G] 		= "G";
 		
 		keyWords[KeyEvent.VK_R] 		= "R";
 		keyWords[KeyEvent.VK_P] 		= "P";
@@ -58,6 +61,11 @@ public class InputCodeReader
 		keyWords[KeyEvent.VK_F10]		= "F10";
 		keyWords[KeyEvent.VK_F11]		= "F11";
 		keyWords[KeyEvent.VK_F12]		= "F12";
+		
+		keyWords[KeyEvent.VK_UP] 		= "ua";
+		keyWords[KeyEvent.VK_DOWN] 		= "da";
+		keyWords[KeyEvent.VK_RIGHT]		= "ra";
+		keyWords[KeyEvent.VK_LEFT] 		= "la";
 		
 		userType[MouseEvent.BUTTON1-1] 	= "left";
 		userType[MouseEvent.BUTTON2-1] 	= "wheel";

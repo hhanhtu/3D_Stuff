@@ -20,28 +20,28 @@ public class Presets {
 				floor1.LoadFromObjectFile("floor2");
 				floor1.scale = 2;
 				floor1.name = "floor";
-				floor1.offset = new Vector3D(k*floor1.size().x*2, -floor1.size().y, 0);
+				floor1.offset = new Vector3D(k*floor1.size().x*2, -floor1.size().y*2, 0);
 				floor1.clr = Color.WHITE;
 				
 				MeshPart floor2 = new MeshPart();
 				floor2.LoadFromObjectFile("floor2");
 				floor2.scale = 2;
 				floor2.name = "floor";
-				floor2.offset = new Vector3D(0, -floor2.size().y, k*floor2.size().z*2);
+				floor2.offset = new Vector3D(0, -floor2.size().y*2, k*floor2.size().z*2);
 				floor2.clr = Color.WHITE;
 				
 				MeshPart floor3 = new MeshPart();
 				floor3.LoadFromObjectFile("floor2");
 				floor3.scale = 2;
 				floor3.name = "floor";
-				floor3.offset = new Vector3D(k*floor1.size().x*2, -floor3.size().y, k*floor3.size().z*2);
+				floor3.offset = new Vector3D(k*floor1.size().x*2, -floor3.size().y*2, k*floor3.size().z*2);
 				floor3.clr = Color.GRAY;
 				
 				MeshPart floor4 = new MeshPart();
 				floor4.LoadFromObjectFile("floor2");
 				floor4.scale = 2;
 				floor4.name = "floor";
-				floor4.offset = new Vector3D(k*floor1.size().x*2, -floor4.size().y, -k*floor3.size().z*2);
+				floor4.offset = new Vector3D(k*floor1.size().x*2, -floor4.size().y*2, -k*floor3.size().z*2);
 				floor4.clr = Color.GRAY;
 				
 				m.add(floor1);
@@ -55,7 +55,7 @@ public class Presets {
 		floor1.LoadFromObjectFile("floor2");
 		floor1.scale = 2;
 		floor1.name = "floor";
-		floor1.offset = new Vector3D(0, -floor1.size().y, 0);
+		floor1.offset = new Vector3D(0, -floor1.size().y*2, 0);
 		floor1.clr = Color.GRAY;
 		
 		m.add(floor1);
@@ -79,6 +79,7 @@ public class Presets {
 					floor1.name = "floor";
 					floor1.offset = new Vector3D(i*k*floor1.size().x*2, 0, 0);
 					floor1.clr = Color.WHITE;
+					floor1.collision = false;
 					
 					MeshPart floor2 = new MeshPart();
 					floor2.LoadFromObjectFile("flatFloor");
@@ -86,6 +87,7 @@ public class Presets {
 					floor2.name = "floor";
 					floor2.offset = new Vector3D(0, 0, i*k*floor2.size().z*2);
 					floor2.clr = Color.WHITE;
+					floor2.collision = false;
 					
 					MeshPart floor3 = new MeshPart();
 					floor3.LoadFromObjectFile("flatFloor");
@@ -93,6 +95,7 @@ public class Presets {
 					floor3.name = "floor";
 					floor3.offset = new Vector3D(i*k*floor1.size().x*2, 0, i*k*floor3.size().z*2);
 					floor3.clr = Color.GRAY;
+					floor3.collision = false;
 					
 					MeshPart floor4 = new MeshPart();
 					floor4.LoadFromObjectFile("flatFloor");
@@ -100,6 +103,7 @@ public class Presets {
 					floor4.name = "floor";
 					floor4.offset = new Vector3D(i*k*floor1.size().x*2, 0, -i*k*floor3.size().z*2);
 					floor4.clr = Color.GRAY;
+					floor4.collision = false;
 					
 					for(int v = -1; v <= 1; v++)
 					{
@@ -113,6 +117,7 @@ public class Presets {
 								floor1a.name = "floor";
 								floor1a.offset = new Vector3D(i*k*floor1.size().x*2, 0, j*v*floor1.size().z*2);
 								floor1a.clr = Color.GRAY;
+								floor1a.collision = false;
 								
 								MeshPart floor2a = new MeshPart();
 								floor2a.LoadFromObjectFile("flatFloor");
@@ -120,6 +125,7 @@ public class Presets {
 								floor2a.name = "floor";
 								floor2a.offset = new Vector3D(j*k*floor1.size().x*2, 0, i*v*floor1.size().z*2);
 								floor2a.clr = Color.GRAY;
+								floor2a.collision = false;
 								
 								if(i*j*v*k%2 == 0)
 								{
@@ -153,6 +159,8 @@ public class Presets {
 		floor1.name = "floor";
 		floor1.offset = new Vector3D(0, 0, 0);
 		floor1.clr = Color.GRAY;
+		
+		floor1.hitbox = new Vector3D(floor1.size().x*RADIOUS*3.5, floor1.size().y, floor1.size().z*RADIOUS*3.5);
 		
 		m.add(floor1);
 		
